@@ -1280,6 +1280,25 @@ function closeModal(){
   _editingTaskId=null;
 }
 
+function _refreshCurrentPage(){
+  const pages=['tasks','dashboard','fin-browser','nonfin-browser','budget','forecast','reports','runbook','settings'];
+  for(const p of pages){
+    const el=$('page-'+p);
+    if(el&&el.style.display!=='none'){
+      if(p==='tasks') renderTaskBoard();
+      else if(p==='dashboard') renderDashboard();
+      else if(p==='fin-browser') renderFinBrowser();
+      else if(p==='nonfin-browser') renderNonfinBrowser();
+      else if(p==='budget') renderBudget();
+      else if(p==='forecast') renderForecast();
+      else if(p==='reports') renderReports();
+      else if(p==='runbook') renderRunbookPage();
+      return;
+    }
+  }
+  renderTaskBoard();
+}
+
 function saveTask(){
   const name=($('f-name')?.value||'').trim()||($('f-subcategory')?.value||'').trim();
   if(!name){ alert('Please select a Task Name.'); return; }
@@ -1305,14 +1324,14 @@ function saveTask(){
   };
   if(_editingTaskId){ const idx=ST.tasks.findIndex(t=>t.id===_editingTaskId); if(idx>=0) ST.tasks[idx]=task; else ST.tasks.push(task); }
   else ST.tasks.push(task);
-  saveState(); closeModal(); renderCurrentPage();
+  saveState(); closeModal(); _refreshCurrentPage();
 }
 
 function deleteTask(id){
   if(ST.currentUser&&ST.currentUser.role!=='admin'){ alert('Only admins can delete tasks.'); return; }
   if(!confirm('Delete this task?')) return;
   ST.tasks=ST.tasks.filter(t=>t.id!==id);
-  saveState(); renderCurrentPage();
+  saveState(); _refreshCurrentPage();
 }
 
 // ── FINANCIAL TASK BROWSER ──────────────────────────────────────────────────
@@ -1330,37 +1349,73 @@ function renderFinBrowser(){
   let h='';
   Object.keys(FIN_DATA).sort().forEach(cat=>{
     if(filterCat&&cat!==filterCat) return;
-    let rows='';let cnt=0;
+    let subHtml='';let totalTasks=0;
     Object.keys(FIN_DATA[cat]).sort().forEach(sub=>{
+      let taskRows='';let subCount=0;
       Object.keys(FIN_DATA[cat][sub]).sort().forEach(task=>{
         const entry=FIN_DATA[cat][sub][task];
         if(search&&!(cat+' '+sub+' '+task).toLowerCase().includes(search)) return;
-        cnt++;
+        subCount++;totalTasks++;
         const vendors=entry.vendors||[];
         const already=ST.tasks.some(t=>t.name===task&&t.taskType==='financial');
-        const estBadge=entry.est>0?'<span style="background:#fffbeb;color:#b45309;border:1px solid #fcd34d;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">~$'+entry.est.toLocaleString()+'</span>':'';
-        const vStr=vendors.length?vendors.map(v=>v.url?'<a href="'+v.url+'" target="_blank" style="color:var(--accent);font-size:11px;">'+v.name+'</a>':'<span style="font-size:11px;color:var(--text2);">'+v.name+'</span>').join(', '):'';
-        rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);">'
-          +'<div style="flex:1;">'
-          +'<div style="font-size:13px;font-weight:600;color:var(--text);">'+task+'</div>'
-          +'<div style="font-size:11px;color:var(--text2);margin-top:2px;">'+sub+'</div>'
-          +(vStr?'<div style="margin-top:4px;">'+vStr+'</div>':'')
-          +'</div>'
-          +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
-          +estBadge
-          +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px;white-space:nowrap;" '
+        const estBadge=entry.est>0?'<span style="background:#fffbeb;color:#b45309;border:1px solid #fcd34d;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600;">~$'+entry.est.toLocaleString()+'</span> ':'';
+        taskRows+='<div style="display:flex;align-items:center;gap:10px;padding:10px 16px 10px 32px;border-bottom:1px solid var(--border);">'
+          +'<div style="flex:1;"><span style="font-size:13px;font-weight:500;color:var(--text);">'+task+'</span> '+estBadge+'</div>'
+          +'<button class="btn '+(already?'btn-ghost':'btn-primary')+'" style="padding:5px 14px;font-size:12px;white-space:nowrap;" '
           +(already?'disabled ':'')
-          +'onclick=\'addFinTask('+JSON.stringify(cat)+','+JSON.stringify(sub)+','+JSON.stringify(task)+','+entry.est+','+JSON.stringify(vendors)+')\'>'
-          +(already?'&#10003; Added':'+ Add')+'</button>'
-          +'</div></div>';
+          +'onclick=\'quickAddTask("financial",'+JSON.stringify(cat)+','+JSON.stringify(sub)+','+JSON.stringify(task)+','+entry.est+','+JSON.stringify(vendors)+')\'>'
+          +(already?'&#10003; Added':'+ Add Task')+'</button>'
+          +'</div>';
       });
+      if(taskRows) subHtml+='<div>'
+        +'<div style="padding:8px 16px 8px 20px;background:var(--bg);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);display:flex;justify-content:space-between;">'
+        +'<span>'+sub+'</span><span style="font-weight:400;opacity:0.7;">'+subCount+' tasks</span></div>'
+        +taskRows+'</div>';
     });
-    if(rows) h+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;">'
-      +'<div style="padding:12px 16px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between;">'
-      +'<span>'+cat+'</span><span style="font-size:11px;font-weight:400;opacity:0.85;">'+cnt+' tasks</span></div>'
-      +rows+'</div>';
+    if(subHtml||!search){
+      const id='fin-cat-'+cat.replace(/\W/g,'_');
+      h+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;">'
+        +'<div style="padding:13px 16px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleSection(\''+id+'\')">'
+        +'<span>'+cat+'</span>'
+        +'<div style="display:flex;align-items:center;gap:12px;"><span style="font-size:11px;font-weight:400;opacity:0.85;">'+totalTasks+' tasks</span>'
+        +'<span id="'+id+'-icon" style="font-size:16px;">&#9660;</span></div></div>'
+        +'<div id="'+id+'">'+(subHtml||'<div style="padding:16px;color:var(--text3);font-size:13px;">No tasks match your search.</div>')+'</div>'
+        +'</div>';
+    }
   });
   container.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--text3);">No tasks found.</div>';
+}
+
+function toggleSection(id){
+  const el=$(id);
+  const icon=$(id+'-icon');
+  if(!el) return;
+  if(el.style.display==='none'){
+    el.style.display='';
+    if(icon) icon.innerHTML='&#9660;';
+  } else {
+    el.style.display='none';
+    if(icon) icon.innerHTML='&#9654;';
+  }
+}
+
+function quickAddTask(type,cat,sub,taskName,est,vendors){
+  const already=ST.tasks.some(t=>t.name===taskName&&t.taskType===type);
+  if(already){ alert(taskName+' is already on your Task Board.'); return; }
+  const task={
+    id:Date.now().toString(),
+    taskType:type, name:taskName, category:cat, subcategory:sub,
+    description:'', priority:'medium',
+    estimatedCost:est||0, actualCost:0,
+    dueDate:'', status:'todo',
+    vendor:vendors&&vendors.length?vendors[0].name:'',
+    vendorUrl:vendors&&vendors.length?vendors[0].url:'',
+    contactName:'',contactEmail:'',contactPhone:'',
+    createdAt:Date.now()
+  };
+  ST.tasks.push(task);
+  saveState();
+  _refreshCurrentPage();
 }
 
 function addNonfinTask(cat,sub,task,vendors){
@@ -1412,32 +1467,38 @@ function renderNonfinBrowser(){
   let h='';
   Object.keys(NFIN_DATA).sort().forEach(cat=>{
     if(filterCat&&cat!==filterCat) return;
-    let rows='';let cnt=0;
+    let subHtml='';let totalTasks=0;
     Object.keys(NFIN_DATA[cat]).sort().forEach(sub=>{
+      let taskRows='';let subCount=0;
       Object.keys(NFIN_DATA[cat][sub]).sort().forEach(task=>{
         if(search&&!(cat+' '+sub+' '+task).toLowerCase().includes(search)) return;
-        cnt++;
+        subCount++;totalTasks++;
         const entry=NFIN_DATA[cat][sub][task];
         const vendors=entry.vendors||[];
         const already=ST.tasks.some(t=>t.name===task&&t.taskType==='nonfinancial');
-        const vStr=vendors.length?vendors.map(v=>v.url?'<a href="'+v.url+'" target="_blank" style="color:var(--accent);font-size:11px;">'+v.name+'</a>':'<span style="font-size:11px;color:var(--text2);">'+v.name+'</span>').join(', '):'';
-        rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);">'
-          +'<div style="flex:1;">'
-          +'<div style="font-size:13px;font-weight:600;color:var(--text);">'+task+'</div>'
-          +'<div style="font-size:11px;color:var(--text2);margin-top:2px;">'+sub+'</div>'
-          +(vStr?'<div style="margin-top:4px;">'+vStr+'</div>':'')
-          +'</div>'
-          +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px;white-space:nowrap;" '
+        taskRows+='<div style="display:flex;align-items:center;gap:10px;padding:10px 16px 10px 32px;border-bottom:1px solid var(--border);">'
+          +'<div style="flex:1;font-size:13px;font-weight:500;color:var(--text);">'+task+'</div>'
+          +'<button class="btn '+(already?'btn-ghost':'btn-primary')+'" style="padding:5px 14px;font-size:12px;white-space:nowrap;" '
           +(already?'disabled ':'')
-          +'onclick=\'addNonfinTask('+JSON.stringify(cat)+','+JSON.stringify(sub)+','+JSON.stringify(task)+','+JSON.stringify(vendors)+')\'>'
-          +(already?'&#10003; Added':'+ Add')+'</button>'
+          +'onclick=\'quickAddTask("nonfinancial",'+JSON.stringify(cat)+','+JSON.stringify(sub)+','+JSON.stringify(task)+',0,'+JSON.stringify(vendors)+')\'>'
+          +(already?'&#10003; Added':'+ Add Task')+'</button>'
           +'</div>';
       });
+      if(taskRows) subHtml+='<div>'
+        +'<div style="padding:8px 16px 8px 20px;background:var(--bg);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);display:flex;justify-content:space-between;">'
+        +'<span>'+sub+'</span><span style="font-weight:400;opacity:0.7;">'+subCount+' tasks</span></div>'
+        +taskRows+'</div>';
     });
-    if(rows) h+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;">'
-      +'<div style="padding:12px 16px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between;">'
-      +'<span>'+cat+'</span><span style="font-size:11px;font-weight:400;opacity:0.85;">'+cnt+' tasks</span></div>'
-      +rows+'</div>';
+    if(subHtml||!search){
+      const id='nfin-cat-'+cat.replace(/\W/g,'_');
+      h+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;">'
+        +'<div style="padding:13px 16px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleSection(\''+id+'\')">'
+        +'<span>'+cat+'</span>'
+        +'<div style="display:flex;align-items:center;gap:12px;"><span style="font-size:11px;font-weight:400;opacity:0.85;">'+totalTasks+' tasks</span>'
+        +'<span id="'+id+'-icon" style="font-size:16px;">&#9660;</span></div></div>'
+        +'<div id="'+id+'">'+(subHtml||'<div style="padding:16px;color:var(--text3);font-size:13px;">No tasks match your search.</div>')+'</div>'
+        +'</div>';
+    }
   });
   container.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--text3);">No tasks found.</div>';
 }
