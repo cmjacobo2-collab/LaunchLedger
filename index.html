@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaunchLedger v2026.01.03 — Business Budget Tracker</title>
+<meta name="theme-color" content="#2C5F2E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LaunchLedger">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#F8F6F1;--surface:#FFFFFF;--surface2:#F2EFE8;--border:#E8E3D9;--border2:#D4CEBC;
+--text:#1A1714;--text2:#6B6458;--text3:#9B9185;
+--accent:#2C5F2E;--accent2:#4A8C4D;--accent-bg:#EBF4EB;
+--amber:#B07D2A;--amber-bg:#FDF5E6;--amber-border:#E8D5A3;
+--red:#C0392B;--red-bg:#FEF0EE;--red-border:#F5C6C0;
+--blue:#1B5E8A;--blue-bg:#EBF4FB;--blue-border:#B8D8F0;
+--purple:#5B3B8C;--purple-bg:#F2ECFB;--purple-border:#CDB8EE;
+--radius:12px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+--font-sans:'DM Sans',ui-sans-serif,system-ui,sans-serif;
+--font-display:'DM Serif Display',ui-serif,Georgia,serif;
+--sidebar-bg:#1A1714;--sidebar-fg:#fff;--sidebar-fg-muted:rgba(255,255,255,.65);
+--sidebar-fg-dim:rgba(255,255,255,.4);--sidebar-fg-faint:rgba(255,255,255,.3);
+--sidebar-divider:rgba(255,255,255,.08);--sidebar-hover:rgba(255,255,255,.07);
+--sidebar-tag-bg:rgba(255,255,255,.06);
+--pg-pad:28px;--card-pad:20px;--gap:20px;
+}
+/* AUTH */
+#auth-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-shell{width:100%;max-width:460px;}
+.auth-brand{text-align:center;margin-bottom:28px;}
+.auth-brand-logo{font-family:var(--font-display);font-size:32px;color:var(--text);letter-spacing:-.5px}
+.auth-brand-tagline{font-size:12px;color:var(--text3);margin-top:4px;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 4px 32px rgba(0,0,0,.07);animation:slideUp .3s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.auth-tab-row{display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:24px;gap:2px;}
+.auth-tab{flex:1;padding:8px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);background:transparent;cursor:pointer;transition:.15s;}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.auth-panel{display:none;}
+.auth-panel.active{display:block;}
+.auth-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.03em;}
+.auth-input{width:100%;padding:10px 13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.auth-input:focus{border-color:var(--accent);}
+.auth-group{margin-bottom:14px;}
+.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.auth-btn{width:100%;padding:11px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;margin-top:6px;}
+.auth-btn-primary{background:var(--accent);color:#fff;}
+.auth-btn-primary:hover{background:var(--accent2);}
+.auth-error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--radius-sm);padding:9px 13px;font-size:12px;margin-bottom:12px;display:none;}
+.auth-error.show{display:block;}
+.code-box{background:var(--text);border-radius:12px;padding:20px;text-align:center;margin:16px 0;}
+.code-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px;}
+.code-value{font-family:var(--font-display);font-size:30px;letter-spacing:.18em;color:#fff;user-select:all;}
+.code-hint{font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;line-height:1.5;}
+.code-copy-btn{margin-top:12px;border:1px solid rgba(255,255,255,.18);background:transparent;color:rgba(255,255,255,.7);padding:6px 16px;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text3);font-size:12px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.auth-footer{text-align:center;font-size:11px;color:var(--text3);margin-top:14px;line-height:1.6;}
+.auth-success-icon{width:44px;height:44px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.auth-success-icon svg{width:20px;height:20px;stroke:var(--accent);}
+.role-pills{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.role-pill{border:2px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer;transition:.15s;text-align:center;}
+.role-pill:hover{border-color:var(--border2);background:var(--surface2);}
+.role-pill.selected{border-color:var(--accent);background:var(--accent-bg);}
+.role-pill-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.role-pill-desc{font-size:11px;color:var(--text2);}
+/* PAYWALL */
+#paywall-gate{position:fixed;inset:0;background:var(--bg);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+#paywall-gate.open{display:flex;}
+.pw-shell{width:100%;max-width:540px;padding:20px 0;}
+.pw-brand-logo{font-family:var(--font-display);font-size:26px;color:var(--text);text-align:center;margin-bottom:20px;}
+.pw-eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:5px;text-align:center;}
+.pw-headline{font-family:var(--font-display);font-size:24px;color:var(--text);margin-bottom:6px;text-align:center;}
+.pw-sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px;text-align:center;}
+.plan-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.plan-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:.15s;position:relative;}
+.plan-card.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);}
+.plan-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;white-space:nowrap;}
+.plan-name{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+.plan-price{font-family:var(--font-display);font-size:30px;color:var(--text);}
+.plan-period{font-size:11px;color:var(--text3);margin-top:2px;}
+.plan-features{margin-top:12px;display:flex;flex-direction:column;gap:5px;}
+.plan-feature{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);}
+.plan-feature-check{width:13px;height:13px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.plan-feature-check svg{width:7px;height:7px;stroke:var(--accent);stroke-width:3;}
+.pw-payment-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;}
+.pw-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;}
+.pw-input{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-input-group{margin-bottom:10px;}
+.pw-input-label{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:4px;display:block;}
+.pw-card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pw-order-summary{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;}
+.pw-order-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--text2);}
+.pw-order-total{display:flex;justify-content:space-between;padding:8px 0 0;border-top:1px solid var(--border2);font-weight:600;color:var(--text);margin-top:5px;}
+.pw-pay-btn{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.pw-pay-btn:hover{background:var(--accent2);}
+.pw-security{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text3);margin-top:10px;}
+.pw-success-screen{display:none;text-align:center;padding:20px 0;}
+.pw-success-screen.show{display:block;}
+.pw-success-icon{width:56px;height:56px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.pw-success-icon svg{width:24px;height:24px;stroke:var(--accent);}
+.sub-banner{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius-sm);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--amber);margin-bottom:14px;}
+.sub-banner-upgrade{background:var(--amber);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}
+/* USER PILL */
+.user-pill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 5px;font-size:12px;color:var(--text2);}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+.user-name{font-weight:500;color:var(--text);}
+.signout-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 0 0 8px;font-family:inherit;border-left:1px solid var(--border2);margin-left:2px;}
+.signout-btn:hover{color:var(--red);}
+/* APP LAYOUT */
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--sidebar-bg);color:var(--sidebar-fg);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid var(--sidebar-divider);}
+.logo-mark{font-family:var(--font-display);font-size:20px;color:var(--sidebar-fg);letter-spacing:-.5px}
+.logo-sub{font-size:10px;color:var(--sidebar-fg-dim);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.logo-ver{font-size:9px;color:var(--sidebar-fg-faint);margin-top:3px;letter-spacing:.04em;}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-section{margin-bottom:20px}
+.nav-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--sidebar-fg-faint);padding:0 10px;margin-bottom:5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--sidebar-fg-muted);font-size:13px;font-weight:400;transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.nav-item:hover{background:var(--sidebar-hover);color:var(--sidebar-fg)}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:500}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.8}
+.nav-item.active svg{opacity:1}
+.sidebar-bottom{padding:12px 10px;border-top:1px solid var(--sidebar-divider)}
+.biz-tag{background:var(--sidebar-tag-bg);border-radius:8px;padding:10px 12px;}
+.biz-name{font-size:13px;font-weight:500;color:var(--sidebar-fg)}
+.biz-stage{font-size:11px;color:var(--sidebar-fg-dim);margin-top:2px}
+.sidebar-cta{margin-top:10px;background:rgba(44,95,46,.3);border:1px solid rgba(44,95,46,.5);border-radius:8px;padding:10px 12px;}
+.sidebar-cta a{color:#8fcf92;font-size:11px;text-decoration:none;font-weight:500;}
+.sidebar-cta a:hover{color:#fff;}
+.sidebar-cta-line{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;}
+.main{overflow-y:auto;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-family:var(--font-display);font-size:20px;color:var(--text)}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-amber{background:var(--amber);color:#fff;border-color:var(--amber);}
+.btn-amber:hover{opacity:.9;}
+.page{padding:var(--pg-pad) calc(var(--pg-pad) + 4px);display:none}
+.page.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad) calc(var(--card-pad) + 4px);box-shadow:var(--shadow)}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:var(--gap)}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.metric-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.metric-value{font-family:var(--font-display);font-size:24px;color:var(--text);line-height:1}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:5px}
+.metric-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-green{background:var(--accent-bg);color:var(--accent)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);margin-bottom:var(--gap)}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad) calc(var(--card-pad) + 4px);box-shadow:var(--shadow)}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.chart-title{font-size:14px;font-weight:500;color:var(--text)}
+.chart-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.chart-wrap{position:relative;height:200px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+/* TASK BOARD */
+.task-columns{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.task-col{background:var(--surface2);border-radius:var(--radius);padding:14px;min-height:360px}
+.col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.col-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px}
+.col-count{background:var(--border2);color:var(--text2);font-size:11px;font-weight:600;padding:2px 7px;border-radius:12px}
+.col-todo .col-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.col-inprogress .col-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.col-done .col-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.task-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.task-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.task-category{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);}
+.task-type-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.04em;}
+.task-type-financial{background:var(--blue-bg);color:var(--blue);}
+.task-type-nonfinancial{background:var(--purple-bg);color:var(--purple);}
+.task-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;line-height:1.3}
+.task-desc{font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.4}
+.task-meta{display:flex;align-items:center;justify-content:space-between}
+.task-cost{font-size:13px;font-weight:600;color:var(--text)}
+.task-cost.no-cost{color:var(--text3);font-size:11px;font-style:italic;}
+.task-due{font-size:11px;color:var(--text3)}
+.task-due.overdue{color:var(--red)}
+.add-task-btn{width:100%;border:1.5px dashed var(--border2);border-radius:var(--radius-sm);padding:9px;text-align:center;font-size:12px;color:var(--text3);cursor:pointer;background:transparent;transition:all .15s;font-family:inherit}
+.add-task-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:9px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);font-weight:500}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+.cat-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.priority-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px}
+.priority-high{background:var(--red)}
+.priority-med{background:var(--amber)}
+.priority-low{background:var(--accent)}
+tfoot td{padding:11px 12px;font-weight:600;font-size:13px;border-top:2px solid var(--border2);color:var(--text)}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:100%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.15);max-height:92vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-family:var(--font-display);font-size:20px}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;border-radius:6px;font-size:18px;line-height:1;transition:.15s}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.03em;display:flex;align-items:center;gap:5px;}
+.form-control{width:100%;padding:8px 11px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+.form-control:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239B9185' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+/* TOOLTIP */
+.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--border2);color:var(--text3);font-size:9px;font-weight:700;cursor:default;flex-shrink:0;}
+.tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:11px;font-weight:400;padding:6px 10px;border-radius:7px;white-space:pre-wrap;max-width:220px;z-index:200;line-height:1.5;text-align:left;letter-spacing:0;}
+.tip:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--text);z-index:200;}
+/* SETTINGS */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.section-title{font-family:var(--font-display);font-size:18px;margin-bottom:14px}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-key{font-size:13px;color:var(--text2)}
+.stat-val{font-size:13px;font-weight:600;color:var(--text)}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.donut-total{font-family:var(--font-display);font-size:20px;color:var(--text)}
+.donut-label{font-size:11px;color:var(--text3)}
+.alert{border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.alert-amber{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber)}
+.alert-red{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.alert-green{background:var(--accent-bg);border:1px solid #c8e6c9;color:var(--accent)}
+/* FUNDING MULTI SELECT */
+.funding-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.funding-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:.12s;}
+.funding-item:hover{border-color:var(--border2);background:var(--surface2);}
+.funding-item.selected{border-color:var(--accent);background:var(--accent-bg);}
+.funding-item input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;flex-shrink:0;}
+.funding-item-label{font-size:12px;font-weight:500;color:var(--text);flex:1;}
+.funding-amount{width:90px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;display:none;}
+.funding-item.selected .funding-amount{display:block;}
+.funding-total{font-size:14px;font-weight:600;color:var(--accent);padding:8px 10px;background:var(--accent-bg);border-radius:8px;text-align:right;}
+/* STAR RATING */
+.star-rating{display:flex;gap:4px;}
+.star-rating .star{font-size:22px;cursor:pointer;color:var(--border2);transition:color .1s;line-height:1;}
+.star-rating .star.filled{color:#F59E0B;}
+.star-rating .star:hover,.star-rating .star:hover ~ .star{color:var(--border2);}
+.star-rating:hover .star{color:#F59E0B;}
+.star-rating .star:hover ~ .star{color:var(--border2);}
+/* RUNBOOK */
+.runbook-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:var(--shadow);}
+.runbook-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.runbook-title{font-size:14px;font-weight:600;color:var(--text);}
+.runbook-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;}
+.runbook-field{display:flex;flex-direction:column;gap:2px;}
+.runbook-field-label{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);}
+.runbook-field-value{color:var(--text);font-weight:500;}
+.runbook-field-value a{color:var(--accent);text-decoration:none;}
+/* NON-FIN CONFIRM */
+.nonfin-confirm{background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:var(--radius);padding:18px;text-align:center;margin-bottom:14px;}
+.nonfin-confirm-title{font-family:var(--font-display);font-size:17px;color:var(--text);margin-bottom:6px;}
+.nonfin-confirm-sub{font-size:12px;color:var(--text2);margin-bottom:14px;}
+.nonfin-btn-row{display:flex;gap:10px;justify-content:center;}
+/* HOW TO GUIDE */
+.guide-section{margin-bottom:28px;}
+.guide-h2{font-family:var(--font-display);font-size:20px;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);}
+.guide-h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;margin-top:14px;}
+.guide-p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:8px;}
+.guide-step{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start;}
+.guide-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.guide-step-text{font-size:13px;color:var(--text2);line-height:1.6;}
+/* VENDOR LINK */
+.vendor-link{color:var(--accent);text-decoration:none;font-size:11px;}
+.vendor-link:hover{text-decoration:underline;}
+/* PAYMENT TERMS POPUP */
+.pt-desc{font-size:11px;color:var(--text3);margin-top:4px;padding:6px 8px;background:var(--surface2);border-radius:6px;display:none;}
+select:focus + .pt-desc{display:block;}
+@media(max-width:1100px){.metric-grid{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.app{grid-template-columns:1fr}.sidebar{display:none}}
+/* ROLE BADGE */
+.role-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.04em;margin-left:4px;}
+.role-badge-admin{background:var(--amber-bg);color:var(--amber);}
+.role-badge-user{background:var(--blue-bg);color:var(--blue);}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="auth-shell">
+    <div class="auth-brand">
+      <div class="auth-brand-logo">LaunchLedger</div>
+      <div class="auth-brand-tagline">Startup Budget Tracker &mdash; v2026.01.02</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tab-row">
+        <button class="auth-tab active" id="tab-register" onclick="switchAuthTab('register')">New User</button>
+        <button class="auth-tab" id="tab-login" onclick="switchAuthTab('login')">Return User</button>
+      </div>
+      <!-- REGISTER -->
+      <div class="auth-panel active" id="panel-register">
+        <div id="reg-error" class="auth-error"></div>
+        <div id="reg-step1">
+          <div class="auth-row">
+            <div class="auth-group"><label class="auth-label">First Name</label><input class="auth-input" id="reg-first" placeholder="Jane"></div>
+            <div class="auth-group"><label class="auth-label">Last Name</label><input class="auth-input" id="reg-last" placeholder="Smith"></div>
+          </div>
+          <div class="auth-group"><label class="auth-label">Email Address</label><input class="auth-input" id="reg-email" type="email" placeholder="jane@company.com"></div>
+          <div class="auth-group">
+            <label class="auth-label">Your Role</label>
+            <div class="role-pills">
+              <div class="role-pill selected" id="role-pill-admin" onclick="selectRole('admin')">
+                <div class="role-pill-title">&#128274; Admin</div>
+                <div class="role-pill-desc">Full access. Can delete tasks &amp; invite a User.</div>
+              </div>
+              <div class="role-pill" id="role-pill-user" onclick="selectRole('user')">
+                <div class="role-pill-title">&#128100; User</div>
+                <div class="role-pill-desc">Shared access. Enter the business code from your Admin.</div>
+              </div>
+            </div>
+          </div>
+          <div id="user-biz-code-group" class="auth-group" style="display:none">
+            <label class="auth-label">Business Code (from your Admin)</label>
+            <input class="auth-input" id="reg-biz-code" placeholder="LL-XXXX-XXXX" style="letter-spacing:.1em;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <button class="auth-btn auth-btn-primary" onclick="registerUser()">Create My Tracker &rarr;</button>
+        </div>
+        <div id="reg-step2" style="display:none">
+          <div style="text-align:center;padding:6px 0 2px">
+            <div class="auth-success-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <div style="font-family:var(--font-display);font-size:20px;margin-bottom:4px">You're all set!</div>
+            <div style="font-size:13px;color:var(--text2)">Welcome, <span id="reg-welcome-name" style="font-weight:600;color:var(--text)"></span></div>
+          </div>
+          <div class="code-box">
+            <div class="code-label">Your Access Code</div>
+            <div class="code-value" id="reg-code-display">LL-XXXX-XXXX</div>
+            <div class="code-hint">Save this code. Use it + your email to return from any device.</div>
+            <div id="reg-biz-code-display" style="display:none;margin-top:8px;font-size:11px;color:rgba(255,255,255,.5)"></div>
+            <button class="code-copy-btn" onclick="copyCode()">Copy Code</button>
+          </div>
+          <button class="auth-btn auth-btn-primary" onclick="enterApp()">Open My Tracker &rarr;</button>
+        </div>
+      </div>
+      <!-- LOGIN -->
+      <div class="auth-panel" id="panel-login">
+        <div id="login-error" class="auth-error"></div>
+        <div class="auth-group">
+          <label class="auth-label">Access Code</label>
+          <input class="auth-input" id="login-code" placeholder="LL-XXXX-XXXX" style="font-size:15px;letter-spacing:.1em;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="auth-group">
+          <label class="auth-label">Email Address</label>
+          <input class="auth-input" id="login-email" type="email" placeholder="jane@company.com">
+        </div>
+        <button class="auth-btn auth-btn-primary" onclick="loginUser()">Access My Tracker &rarr;</button>
+        <div class="auth-divider">or</div>
+        <div style="text-align:center;font-size:13px;color:var(--text2)">
+          New here? <button onclick="switchAuthTab('register')" style="background:none;border:none;color:var(--accent);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0">Create free tracker &rarr;</button>
+        </div>
+      </div>
+    </div>
+    <div class="auth-footer">
+      Data is stored securely in your browser.<br>
+      <a href="https://acrossthetable.biz" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:500;">AcrosstheTable.biz</a> &nbsp;&middot;&nbsp;
+      <a href="mailto:info@acrossthetable.biz" style="color:var(--text3);text-decoration:none;">One on One Consultation</a>
+    </div>
+  </div>
+</div>
+
+<!-- NON-FINANCIAL CONFIRM MODAL -->
+<div class="modal-overlay" id="nonfin-modal">
+  <div class="modal" style="max-width:420px;text-align:center;">
+    <div class="nonfin-confirm">
+      <div class="nonfin-confirm-title" id="nonfin-task-name">Task Name</div>
+      <div class="nonfin-confirm-sub" id="nonfin-task-desc">Description here</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Would you like to add this Non-Financial task to your Task Board?</div>
+      <div class="nonfin-btn-row">
+        <button class="btn btn-ghost" onclick="closeNonfinModal()">No &mdash; Skip</button>
+        <button class="btn btn-primary" onclick="confirmAddNonfin()">Yes &mdash; Add to Board</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RUNBOOK MODAL -->
+<div class="modal-overlay" id="runbook-modal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title" id="runbook-modal-title">Create RunBook Entry</div>
+      <button class="modal-close" onclick="closeRunbookModal()">&times;</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Contact Person Name <span class="tip" data-tip="The main point of contact for this vendor or service.">?</span></label><input class="form-control" id="rb-contact-name" placeholder="John Doe"></div>
+      <div class="form-group"><label class="form-label">Contact Phone <span class="tip" data-tip="Direct phone number for your contact.">?</span></label><input class="form-control" id="rb-contact-phone" placeholder="(555) 000-0000"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Contact Email <span class="tip" data-tip="Email address for your contact person.">?</span></label><input class="form-control" id="rb-contact-email" type="email" placeholder="contact@vendor.com"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Start Date <span class="tip" data-tip="When the service or contract began.">?</span></label><input class="form-control" id="rb-start-date" type="date"></div>
+      <div class="form-group"><label class="form-label">End Date <span class="tip" data-tip="When the contract or service period ends.">?</span></label><input class="form-control" id="rb-end-date" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Renewal Date <span class="tip" data-tip="Date when this contract or service is up for renewal.">?</span></label><input class="form-control" id="rb-renewal-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Renewal Terms <span class="tip" data-tip="Conditions under which the contract renews (e.g. auto-renews annually).">?</span></label><input class="form-control" id="rb-renewal-terms" placeholder="e.g. Auto-renews annually"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Contract Value ($) <span class="tip" data-tip="Total dollar value of the contract or agreement.">?</span></label><input class="form-control" id="rb-contract-value" type="number" placeholder="0.00"></div>
+      <div class="form-group">
+        <label class="form-label">Payment Terms <span class="tip" data-tip="Standard GAAP payment terms defining when payment is due.">?</span></label>
+        <select class="form-control form-select" id="rb-payment-terms" onchange="showPaymentTermDesc()">
+          <option value="">Select terms...</option>
+          <option value="Net 7">Net 7 &mdash; Due in 7 days</option>
+          <option value="Net 15">Net 15 &mdash; Due in 15 days</option>
+          <option value="Net 30">Net 30 &mdash; Due in 30 days</option>
+          <option value="Net 45">Net 45 &mdash; Due in 45 days</option>
+          <option value="Net 60">Net 60 &mdash; Due in 60 days</option>
+          <option value="Net 90">Net 90 &mdash; Due in 90 days</option>
+          <option value="Due on Receipt">Due on Receipt &mdash; Pay immediately</option>
+          <option value="2/10 Net 30">2/10 Net 30 &mdash; 2% discount if paid in 10 days</option>
+          <option value="1/15 Net 30">1/15 Net 30 &mdash; 1% discount if paid in 15 days</option>
+          <option value="EOM">EOM &mdash; End of Month</option>
+          <option value="COD">COD &mdash; Cash on Delivery</option>
+          <option value="Prepaid">Prepaid &mdash; Pay before service</option>
+          <option value="Monthly">Monthly &mdash; Recurring monthly</option>
+          <option value="Annual">Annual &mdash; Recurring yearly</option>
+        </select>
+        <div id="pt-desc-box" class="pt-desc"></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Last Ordered Date <span class="tip" data-tip="Most recent date you placed an order with this vendor.">?</span></label><input class="form-control" id="rb-last-order" type="date"></div>
+      <div class="form-group"><label class="form-label">Next Order Date <span class="tip" data-tip="Planned date for your next order or reorder.">?</span></label><input class="form-control" id="rb-next-order" type="date"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Performance Rating <span class="tip" data-tip="Rate your satisfaction: 1 star = poor, 4 stars = very satisfied.">?</span></label>
+      <div class="star-rating" id="star-rating" onclick="handleStarClick(event)">
+        <span class="star" data-val="1">&#9733;</span>
+        <span class="star" data-val="2">&#9733;</span>
+        <span class="star" data-val="3">&#9733;</span>
+        <span class="star" data-val="4">&#9733;</span>
+      </div>
+      <input type="hidden" id="rb-rating" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Notes <span class="tip" data-tip="Any additional notes about this vendor relationship.">?</span></label><textarea class="form-control" id="rb-notes" rows="2" placeholder="Additional notes..."></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeRunbookModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveRunbook()">Save RunBook Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="main-app" style="display:none">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">LaunchLedger</div>
+    <div class="logo-sub">Startup Budget Tracker</div>
+    <div class="logo-ver">v2026.01.02</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <button class="nav-item active" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('tasks',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Task Board
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Financials</div>
+      <button class="nav-item" onclick="showPage('budget',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Budget Planner
+      </button>
+      <button class="nav-item" onclick="showPage('forecast',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Cash Flow
+      </button>
+      <button class="nav-item" onclick="showPage('reports',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        Reports
+      </button>
+      <button class="nav-item" onclick="showPage('runbook',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        RunBook
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Settings</div>
+      <button class="nav-item" onclick="showPage('settings',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Business Info
+      </button>
+      <button class="nav-item" onclick="showPage('guide',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        How To Use
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="biz-tag">
+      <div class="biz-name" id="sidebar-biz-name">My Startup</div>
+      <div class="biz-stage" id="sidebar-biz-stage">Pre-Revenue</div>
+    </div>
+    <div class="sidebar-cta">
+      <a href="mailto:info@acrossthetable.biz">&#128197; One on One Consultation</a>
+      <div class="sidebar-cta-line">Across The Table &mdash; <a href="https://acrossthetable.biz" target="_blank">acrossthetable.biz</a></div>
+    </div>
+  </div>
+</aside>
+<main class="main">
+<div class="topbar">
+  <div class="topbar-title" id="topbar-title">Dashboard</div>
+  <div class="topbar-actions">
+    <div class="user-pill">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="user-name" id="user-display-name">User</span>
+      <span class="role-badge" id="user-role-badge"></span>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </button>
+    <button class="btn btn-primary btn-sm" onclick="openAddTask()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Task
+    </button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div id="sub-banner-wrap"></div>
+  <div style="margin-bottom:16px" id="dashboard-alerts"></div>
+  <div class="metric-grid" id="metric-grid"></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Budget Allocation</div><div class="chart-sub">By category</div></div></div>
+      <div style="position:relative;height:200px;display:flex;align-items:center;justify-content:center">
+        <canvas id="donutChart"></canvas>
+        <div class="donut-center"><div class="donut-total" id="donutTotal">$0</div><div class="donut-label">Total Budget</div></div>
+      </div>
+      <div class="legend" id="donut-legend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Spend Timeline</div><div class="chart-sub">Planned vs Actual by month</div></div></div>
+      <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Planned</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--accent2);opacity:.5"></span>Actual</span>
+      </div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Spending by Priority</div><div class="chart-sub">High &middot; Medium &middot; Low</div></div></div>
+      <div class="chart-wrap"><canvas id="priorityChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Task Completion</div><div class="chart-sub">Status breakdown</div></div></div>
+      <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK BOARD -->
+<div class="page" id="page-tasks">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <p style="font-size:13px;color:var(--text2)">Click any card to edit. Drag status to move between columns.</p>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="openNonfinBrowser()">+ Non-Financial Task</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddTask()">+ Financial Task</button>
+    </div>
+  </div>
+  <div class="task-columns">
+    <div class="task-col col-todo">
+      <div class="col-header"><div class="col-title">To Do<span class="col-count" id="count-todo">0</span></div></div>
+      <div id="col-todo"></div>
+      <button class="add-task-btn" onclick="openAddTask('todo')">+ Add task</button>
+    </div>
+    <div class="task-col col-inprogress">
+      <div class="col-header"><div class="col-title">In Progress<span class="col-count" id="count-inprogress">0</span></div></div>
+      <div id="col-inprogress"></div>
+      <button class="add-task-btn" onclick="openAddTask('inprogress')">+ Add task</button>
+    </div>
+    <div class="task-col col-done">
+      <div class="col-header"><div class="col-title">Completed<span class="col-count" id="count-done">0</span></div></div>
+      <div id="col-done"></div>
+      <button class="add-task-btn" onclick="openAddTask('done')">+ Add task</button>
+    </div>
+  </div>
+</div>
+
+<!-- NON-FINANCIAL BROWSER -->
+<div class="page" id="page-fin-browser">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Financial Task Library</div>
+      <div class="page-subtitle">Browse all financial tasks and add them to your tracker</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input class="form-control" id="fin-browser-search" placeholder="&#128269; Search tasks..." style="width:220px;" oninput="renderFinBrowser()">
+      <select class="form-control form-select" id="fin-browser-cat" onchange="renderFinBrowser()" style="width:200px;">
+        <option value="">All Categories</option>
+      </select>
+    </div>
+  </div>
+  <div id="fin-browser-list"></div>
+</div>
+
+<div class="page" id="page-nonfin-browser">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div>
+      <h2 style="font-family:var(--font-display);font-size:18px;margin-bottom:4px;">Non-Financial Tasks</h2>
+      <p style="font-size:13px;color:var(--text2);">Click "Add to Board" on any task to include it in your Task Board.</p>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="showPage('tasks',null)">&#8592; Back to Task Board</button>
+  </div>
+  <div id="nonfin-browser-list"></div>
+</div>
+
+<!-- BUDGET -->
+<div class="page" id="page-budget">
+  <div class="card" style="margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h2 class="section-title" style="margin:0">All Expenses</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="form-control form-select" style="width:150px;padding:6px 28px 6px 9px;font-size:12px" id="filter-category" onchange="renderBudgetTable()"><option value="">All Categories</option></select>
+        <select class="form-control form-select" style="width:120px;padding:6px 28px 6px 9px;font-size:12px" id="filter-status" onchange="renderBudgetTable()">
+          <option value="">All Statuses</option><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Expense</th><th>Type</th><th>Category</th><th>Priority</th><th>Status</th><th>Est. Cost</th><th>Actual</th><th>Due Date</th><th>Actions</th></tr></thead>
+        <tbody id="budget-tbody"></tbody>
+        <tfoot><tr><td colspan="5">Total (Financial Tasks)</td><td id="total-est">$0</td><td id="total-act">$0</td><td colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CASH FLOW -->
+<div class="page" id="page-forecast">
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px" id="forecast-metrics"></div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="chart-header"><div class="chart-title">12-Month Cash Flow Projection</div></div>
+    <div style="position:relative;height:280px"><canvas id="cashflowChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h3 class="section-title" style="font-size:16px;margin-bottom:12px">Monthly Burn Rate</h3>
+    <div id="burnrate-table"></div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div class="page" id="page-reports">
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title" style="margin-bottom:4px">Category Breakdown</div>
+      <div class="chart-sub" style="margin-bottom:14px">Estimated vs Actual spend</div>
+      <div style="position:relative;height:260px"><canvas id="reportCatChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" style="margin-bottom:4px">Budget Health Score</div>
+      <div class="chart-sub" style="margin-bottom:14px">Category-level tracking</div>
+      <div id="health-bars"></div>
+    </div>
+  </div>
+  <div style="margin-top:18px" class="card">
+    <h3 style="font-size:14px;font-weight:500;margin-bottom:14px">Summary Statistics</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px" id="summary-stats"></div>
+  </div>
+</div>
+
+<!-- RUNBOOK PAGE -->
+<div class="page" id="page-runbook">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <div>
+      <h2 style="font-family:var(--font-display);font-size:20px;margin-bottom:4px;">RunBook</h2>
+      <p style="font-size:13px;color:var(--text2)">Vendor records created from completed financial tasks. Click a task marked "Done" on the Task Board to create an entry.</p>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openRunbookModal(null)">+ New Entry</button>
+  </div>
+  <div id="runbook-list"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="settings-grid">
+    <div class="card">
+      <h3 class="section-title">Business Profile</h3>
+      <div class="form-group"><label class="form-label">Business Name <span class="tip" data-tip="Your official business or startup name.">?</span></label><input class="form-control" id="biz-name" placeholder="My Startup" oninput="saveSettings()"></div>
+      <div class="form-group">
+        <label class="form-label">Industry <span class="tip" data-tip="Select the industry that best fits your business.">?</span></label>
+        <select class="form-control form-select" id="biz-industry" onchange="saveSettings()">
+          <optgroup label="Home Service Industry">
+            <option>HVAC Companies</option><option>Plumbing Companies</option><option>Electrical Contracting Businesses</option>
+            <option>Cleaning Companies</option><option>Landscaping Businesses</option><option>Construction Companies</option>
+            <option>Auto Repair Shops</option><option>Car Wash Businesses</option>
+          </optgroup>
+          <optgroup label="Technology &amp; Digital Industry">
+            <option>SaaS Companies</option><option>IT Service &amp; Managed Service Providers (MSPs)</option>
+            <option>E-Commerce Businesses</option><option>Amazon FBA Businesses</option><option>Marketing Agencies</option>
+          </optgroup>
+          <optgroup label="Healthcare Industry">
+            <option>Medical Practices</option><option>Dental Practices</option><option>Chiropractic Clinics</option><option>Fitness Gyms &amp; Studios</option>
+          </optgroup>
+          <optgroup label="Professional Services Industry">
+            <option>Accounting Firms</option><option>Law Firms</option><option>Insurance Agencies</option><option>Real Estate Brokerages</option>
+          </optgroup>
+          <optgroup label="Manufacturing &amp; Industrial Industry">
+            <option>Manufacturing Companies</option><option>Logistics &amp; Trucking Companies</option>
+          </optgroup>
+          <optgroup label="Food &amp; Hospitality Industry">
+            <option>Restaurants</option><option>Franchise Businesses</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option>Technology / SaaS</option><option>E-commerce / Retail</option><option>Health &amp; Wellness</option>
+            <option>Consulting / Services</option><option>Creative / Media</option><option>Manufacturing</option>
+            <option>Real Estate</option><option>Other</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Stage <span class="tip" data-tip="Current stage of your business journey.">?</span></label>
+        <select class="form-control form-select" id="biz-stage" onchange="saveSettings()">
+          <option>Idea / Planning</option><option>MVP / Pre-Launch</option><option>Early Revenue</option><option>Growth</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Total Budget ($) <span class="tip" data-tip="Your total planned startup budget across all categories.">?</span></label><input class="form-control" id="total-budget" type="number" placeholder="50000" oninput="saveSettings()"></div>
+        <div class="form-group"><label class="form-label">Monthly Revenue ($) <span class="tip" data-tip="Average monthly revenue your business currently generates.">?</span></label><input class="form-control" id="monthly-revenue" type="number" placeholder="0" oninput="saveSettings()"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Launch Date <span class="tip" data-tip="Target or actual launch date of your business.">?</span></label><input class="form-control" id="launch-date" type="date" oninput="saveSettings()"></div>
+      <div class="divider"></div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px">
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Your Account</div>
+        <div class="stat-row"><span class="stat-key">Access Code</span><span class="stat-val" id="settings-code" style="font-family:monospace;letter-spacing:.1em;font-size:12px">--</span></div>
+        <div class="stat-row"><span class="stat-key">Email</span><span class="stat-val" id="settings-email" style="font-size:12px">--</span></div>
+        <div class="stat-row"><span class="stat-key">Role</span><span class="stat-val" id="settings-role">--</span></div>
+        <div class="stat-row"><span class="stat-key">Member Since</span><span class="stat-val" id="settings-joined">--</span></div>
+        <div class="stat-row"><span class="stat-key">Subscription</span><span class="stat-val" id="settings-sub">--</span></div>
+      </div>
+      <!-- Admin: invite user -->
+      <div id="admin-invite-section" style="display:none;margin-top:14px;">
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Invite a User (Admin Only)</div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
+          <div id="invite-code-display" style="font-size:12px;color:var(--text2);margin-bottom:8px;"></div>
+          <button class="btn btn-ghost btn-sm" onclick="generateUserInvite()">Generate Invite Code</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">Funding Overview</h3>
+      <div class="form-group">
+        <label class="form-label">Funding Type(s) <span class="tip" data-tip="Select all funding sources that apply. Enter the dollar amount for each selected source.">?</span></label>
+        <div class="funding-grid" id="funding-checkboxes"></div>
+        <div class="funding-total" id="funding-total-display">Total Funding: $0</div>
+      </div>
+      <div class="form-group"><label class="form-label">Monthly Operating Budget ($) <span class="tip" data-tip="How much you spend per month to run your business.">?</span></label><input class="form-control" id="monthly-budget" type="number" placeholder="5000" oninput="saveSettings()"></div>
+      <div class="form-group"><label class="form-label">Target Break-Even (months) <span class="tip" data-tip="Number of months until you expect revenue to cover all expenses.">?</span></label><input class="form-control" id="breakeven" type="number" placeholder="18" oninput="saveSettings()"></div>
+      <div class="divider"></div>
+      <div class="stat-row"><span class="stat-key">Total Funding</span><span class="stat-val" id="total-funding-display">--</span></div>
+      <div class="stat-row"><span class="stat-key">Remaining Budget</span><span class="stat-val" id="remaining-budget">--</span></div>
+      <div class="stat-row"><span class="stat-key">% Budget Used</span><span class="stat-val" id="pct-used">--</span></div>
+      <div class="stat-row"><span class="stat-key">Runway (months)</span><span class="stat-val" id="runway">--</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO USE GUIDE -->
+<div class="page" id="page-guide">
+  <div class="card" style="max-width:800px">
+    <div class="guide-section">
+      <div class="guide-h2">&#128218; How to Use LaunchLedger</div>
+      <div class="guide-p">LaunchLedger is a startup budget tracker designed to help you plan, track, and manage your business expenses — from your first legal filing to your first marketing campaign. Follow the steps below to get the most out of every feature.</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">1. Getting Started</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text"><strong>Register:</strong> Create an account with your name and email. You'll receive a unique Access Code — save it! This code + your email is how you log back in from any device.</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text"><strong>Choose your role:</strong> Select Admin (full access, can delete tasks &amp; invite a user) or User (shared access, needs a business code from an Admin).</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text"><strong>Set up Business Info:</strong> Go to the Business Info page and fill in your business name, industry, stage, budget, and funding sources. This drives all your charts and projections.</div></div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">2. Dashboard</div>
+      <div class="guide-p">Your dashboard shows four key metrics at a glance: Total Estimated spend, Actual Spent, Remaining Budget, and Tasks Complete. Below are four charts: budget allocation by category (donut), spend timeline by month (bar), spending by priority, and task completion status. Alerts appear automatically if you're over budget or have overdue tasks.</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">3. Task Board</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text"><strong>Financial Tasks</strong> have estimated and actual costs. Click "+ Financial Task" to add one. Fill in the expense name, category, priority, cost, due date, and vendor. Once a Financial Task is marked Done, a "Create RunBook" button appears on its card.</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text"><strong>Non-Financial Tasks</strong> are action items with no cost — like setting up social media, writing your business vision, or doing market research. Click "+ Non-Financial Task" to browse the pre-built library and choose which ones to add to your board.</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Cards move between <em>To Do</em>, <em>In Progress</em>, and <em>Done</em> columns by editing the task and changing the Status dropdown.</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text"><strong>Vendor fields:</strong> On each Financial Task you can select a vendor from the dropdown (auto-fills website and description), or type in any vendor manually. You can also add a Contact Person, email, and phone number — the vendor website becomes a clickable link.</div></div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">4. Budget Planner</div>
+      <div class="guide-p">A full table view of all your expenses. Filter by category or status. Estimated and actual totals are calculated automatically at the bottom. Admins can delete rows; Users can edit but not delete.</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">5. Cash Flow</div>
+      <div class="guide-p">A 12-month projection showing your cash balance over time vs. monthly expenses. Set your Monthly Revenue and Total Funding in Business Info to make the projection accurate. The burn rate table below the chart breaks it down month by month.</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">6. RunBook</div>
+      <div class="guide-p">After a Financial Task is marked Done, click "Create RunBook" on its card. This opens a form where you log vendor details: contact info, contract dates, payment terms, renewal dates, contract value, performance rating, and notes. All RunBook entries appear on the RunBook page for easy reference.</div>
+      <div class="guide-h3">Payment Terms (GAAP Standard)</div>
+      <div class="guide-p"><strong>Net 7/15/30/60/90</strong> — Payment is due within that many days of invoice. <strong>Due on Receipt</strong> — Pay immediately upon receiving the invoice. <strong>2/10 Net 30</strong> — Take a 2% discount if you pay within 10 days; otherwise full amount due in 30. <strong>COD</strong> — Cash on Delivery. <strong>Prepaid</strong> — Payment required before service begins.</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">7. Funding Overview</div>
+      <div class="guide-p">In Business Info, you can select multiple funding sources (Self-Funded, Angel Investment, SBA Loan, etc.) and enter the dollar amount for each. The Total Funding field auto-calculates the grand total. This figure feeds into your Cash Flow projections and runway calculation.</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">8. Reports</div>
+      <div class="guide-p">View estimated vs. actual spend by category (horizontal bar chart), a Budget Health Score (progress bars showing how much of each category budget you've used), and a summary statistics panel with completion rates, highest categories, and variance analysis.</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-h2">9. Need Help?</div>
+      <div class="guide-p">Contact us for a one-on-one consultation:<br>
+        <a href="mailto:info@acrossthetable.biz" style="color:var(--accent);font-weight:500;">info@acrossthetable.biz</a> &nbsp;&middot;&nbsp;
+        <a href="https://acrossthetable.biz" target="_blank" style="color:var(--accent);font-weight:500;">acrossthetable.biz</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- EXPENSE / TASK MODAL -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Task</div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;" id="task-type-row">
+      <div style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--accent);background:var(--accent-bg);text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);" id="ttype-financial" onclick="setTaskType('financial')">&#128181; Financial</div>
+      <div style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--border2);text-align:center;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);" id="ttype-nonfinancial" onclick="setTaskType('nonfinancial')">&#9998; Non-Financial</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category <span class="tip" data-tip="The task category.">?</span></label>
+      <select class="form-control form-select" id="f-category" onchange="cascadeSubcategory()">
+        <option value="">-- Select Category --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subcategory <span class="tip" data-tip="The task subcategory.">?</span></label>
+      <select class="form-control form-select" id="f-subcategory" onchange="cascadeTaskName()">
+        <option value="">-- Select Subcategory --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Task Name <span class="tip" data-tip="Select a task or type your own.">?</span></label>
+      <select class="form-control form-select" id="f-name" onchange="cascadeVendors()">
+        <option value="">-- Select Task --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description <span class="tip" data-tip="A brief description of this task.">?</span></label>
+      <textarea class="form-control" id="f-desc" rows="2" placeholder="Brief description..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Priority <span class="tip" data-tip="How urgent or important this task is.">?</span></label>
+        <select class="form-control form-select" id="f-priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status <span class="tip" data-tip="Current progress.">?</span></label>
+        <select class="form-control form-select" id="f-status"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
+      </div>
+    </div>
+    <div id="financial-fields">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estimated Cost ($) <span class="tip" data-tip="Yellow = market estimate. Enter your own to clear.">?</span></label>
+          <input class="form-control" id="f-est" type="number" placeholder="0.00" min="0" oninput="clearEstHighlight()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Actual Cost ($) <span class="tip" data-tip="Real amount spent.">?</span></label>
+          <input class="form-control" id="f-act" type="number" placeholder="0.00" min="0">
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Due Date <span class="tip" data-tip="Target completion date.">?</span></label>
+      <input class="form-control" id="f-due" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Vendor / Supplier <span class="tip" data-tip="Select from suggested vendors or type your own.">?</span></label>
+      <select class="form-control form-select" id="f-vendor-select" onchange="applyVendorPreset()">
+        <option value="">-- Select Vendor --</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Vendor Name</label><input class="form-control" id="f-vendor" placeholder="e.g. GoDaddy"></div>
+      <div class="form-group"><label class="form-label">Vendor Website</label><input class="form-control" id="f-vendor-url" placeholder="https://vendor.com"></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">Contact Name</label><input class="form-control" id="f-contact-name" placeholder="John Doe"></div>
+      <div class="form-group"><label class="form-label">Contact Email</label><input class="form-control" id="f-contact-email" placeholder="contact@vendor.com"></div>
+      <div class="form-group"><label class="form-label">Contact Phone</label><input class="form-control" id="f-contact-phone" placeholder="(555) 000-0000"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" id="save-task-btn" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const FIN_DATA = {"Office & Operation": {"Accounting & Finance": {"Accountant fees": {"vendors": [], "est": 1500}, "Bookkeeping services": {"vendors": [{"name": "FreshBooks", "url": "https://www.freshbooks.com"}, {"name": "QuickBooks", "url": "https://quickbooks.intuit.com"}, {"name": "Wave", "url": "https://www.waveapps.com"}, {"name": "Xero", "url": "https://www.xero.com"}, {"name": "Zoho Books", "url": "https://www.zoho.com/books"}], "est": 500}, "Financial consulting": {"vendors": [], "est": 200}, "Payroll services": {"vendors": [], "est": 150}, "Tax preparation": {"vendors": [], "est": 500}}, "Technology": {"Accounting software": {"vendors": [], "est": 300}, "AI App - Accounting & Finance": {"vendors": [{"name": "QuickBooks Intuit Assist", "url": "https://quickbooks.intuit.com/ai-accounting-software/"}, {"name": "Xero", "url": "https://www.xero.com/us/"}], "est": 25}, "AI App - Customer Service & Communication": {"vendors": [{"name": "Fireflies.ai", "url": "https://fireflies.ai"}, {"name": "Loom AI", "url": "https://www.loom.com/ai"}, {"name": "Otter.ai", "url": "https://otter.ai"}], "est": 20}, "AI App - Ecommerce & Online Stores": {"vendors": [{"name": "Shopify Magic", "url": "https://www.shopify.com/magic"}], "est": 29}, "AI App - Marketing & Content Creation": {"vendors": [{"name": "Canva AI", "url": "https://www.canva.com/ai-image-generator/"}, {"name": "ChatGPT", "url": "https://chatgpt.com"}, {"name": "Copy.ai", "url": "https://www.copy.ai"}, {"name": "DALL·E", "url": "https://openai.com/dall-e"}, {"name": "Descript", "url": "https://www.descript.com"}, {"name": "ElevenLabs", "url": "https://elevenlabs.io"}, {"name": "Grammarly", "url": "https://www.grammarly.com"}, {"name": "Jasper AI", "url": "https://www.jasper.ai"}, {"name": "Midjourney", "url": "https://www.midjourney.com"}, {"name": "Pictory", "url": "https://pictory.ai"}, {"name": "Surfer SEO", "url": "https://surferseo.com"}, {"name": "Synthesia", "url": "https://www.synthesia.io"}], "est": 30}, "AI App - Project Management & Productivity": {"vendors": [{"name": "Asana AI", "url": "https://asana.com/ai"}, {"name": "Google Gemini", "url": "https://gemini.google.com"}, {"name": "Microsoft Copilot", "url": "https://copilot.microsoft.com"}, {"name": "Monday AI", "url": "https://monday.com/ai"}, {"name": "Notion AI", "url": "https://www.notion.so/product/ai"}], "est": 15}, "AI App - Research & Business Intelligence": {"vendors": [{"name": "Claude", "url": "https://claude.ai"}, {"name": "Perplexity AI", "url": "https://www.perplexity.ai"}], "est": 20}, "AI App - Sales & Sales Funnels": {"vendors": [{"name": "Drift", "url": "https://www.drift.com"}, {"name": "HubSpot AI", "url": "https://www.hubspot.com/artificial-intelligence"}, {"name": "Salesforce Einstein", "url": "https://www.salesforce.com/products/einstein-ai-solutions/"}, {"name": "Tidio AI", "url": "https://www.tidio.com"}, {"name": "Zapier AI", "url": "https://zapier.com/ai"}], "est": 25}, "AI Appllication": {"vendors": [], "est": 20}, "CRM software": {"vendors": [{"name": "HubSpot CRM", "url": "https://www.hubspot.com"}, {"name": "Pipedrive", "url": "https://www.pipedrive.com"}, {"name": "Salesforce", "url": "https://www.salesforce.com"}, {"name": "Zoho CRM", "url": "https://www.zoho.com/crm"}], "est": 50}, "Cybersecurity services": {"vendors": [], "est": 500}, "Domain registration": {"vendors": [], "est": 15}, "File/Cloud storage": {"vendors": [{"name": "Dropbox", "url": "https://www.dropbox.com"}, {"name": "Google Drive", "url": "https://drive.google.com"}, {"name": "OneDrive", "url": "https://onedrive.live.com"}], "est": 10}, "Project management software": {"vendors": [{"name": "Asana", "url": "https://asana.com"}, {"name": "ClickUp", "url": "https://clickup.com"}, {"name": "Monday.com", "url": "https://monday.com"}, {"name": "Trello", "url": "https://trello.com"}], "est": 15}, "Software subscriptions": {"vendors": [], "est": 50}, "Website hosting": {"vendors": [{"name": "Squarespace", "url": "https://www.squarespace.com"}, {"name": "Wix", "url": "https://www.wix.com"}, {"name": "WordPress", "url": "https://wordpress.org"}], "est": 200}}, "Marketing": {"Advertising": {"vendors": [], "est": 500}, "Branding development": {"vendors": [], "est": 2000}, "Email / Newsletter": {"vendors": [{"name": "Beehiiv", "url": "https://www.beehiiv.com"}, {"name": "MailerLite", "url": "https://www.mailerlite.com"}, {"name": "Brevo", "url": "https://www.brevo.com"}, {"name": "GetResponse", "url": "https://www.getresponse.com"}, {"name": "Substack", "url": "https://substack.com"}], "est": 20}, "Email marketing tools": {"vendors": [{"name": "Constant Contact", "url": "https://www.constantcontact.com"}, {"name": "ConvertKit", "url": "https://convertkit.com"}, {"name": "Klaviyo", "url": "https://www.klaviyo.com"}, {"name": "GetResponse", "url": "https://www.getresponse.com"}, {"name": "Mailchimp", "url": "https://mailchimp.com"}, {"name": "Substack", "url": "https://substack.com"}, {"name": "Mailchimp", "url": "https://mailchimp.com"}], "est": 30}, "Graphic design": {"vendors": [], "est": 500}, "Influencer marketing": {"vendors": [], "est": 1000}, "Photography": {"vendors": [], "est": 500}, "Public relations": {"vendors": [], "est": 1500}, "Search engine marketing": {"vendors": [], "est": 500}, "SEO services": {"vendors": [{"name": "Surfer SEO", "url": "https://surferseo.com"}], "est": 500}, "Social media advertising": {"vendors": [], "est": 500}, "Video production": {"vendors": [], "est": 1000}}, "Banking": {"Business bank account fees": {"vendors": [], "est": 15}, "Credit card processing fees": {"vendors": [{"name": "Authorize.net", "url": "https://www.authorize.net"}, {"name": "PayPal", "url": "https://www.paypal.com"}, {"name": "Square", "url": "https://squareup.com"}, {"name": "Stripe", "url": "https://stripe.com"}], "est": 50}, "Merchant service fees": {"vendors": [], "est": 50}, "Transaction fees": {"vendors": [], "est": 20}}, "Professional Services": {"Business consulting": {"vendors": [], "est": 1000}, "IT support": {"vendors": [], "est": 500}, "Legal advisory": {"vendors": [], "est": 300}, "Marketing agency services": {"vendors": [], "est": 2000}}, "Insurance": {"Business interruption insurance": {"vendors": [], "est": 1200}, "General liability insurance": {"vendors": [], "est": 1200}, "Professional liability insurance": {"vendors": [], "est": 1500}, "Property insurance": {"vendors": [], "est": 1000}, "Workers compensation insurance": {"vendors": [], "est": 2000}}, "Travel": {"Business travel": {"vendors": [], "est": 1000}, "Lodging": {"vendors": [], "est": 150}, "Meals and entertainment": {"vendors": [], "est": 100}, "Mileage reimbursement": {"vendors": [], "est": 100}}, "Operations": {"Cleaning services": {"vendors": [], "est": 200}, "Equipment maintenance": {"vendors": [], "est": 500}, "Repairs": {"vendors": [], "est": 300}, "Security services": {"vendors": [], "est": 300}, "Waste disposal": {"vendors": [], "est": 200}}, "Education": {"Conferences and seminars": {"vendors": [], "est": 500}, "Courses and certifications": {"vendors": [], "est": 300}}, "Human Resources": {"Contractor payments": {"vendors": [], "est": 5000}, "Employee benefits": {"vendors": [], "est": 5000}, "Employee salaries": {"vendors": [{"name": "ADP", "url": "https://www.adp.com"}, {"name": "Gusto", "url": "https://gusto.com"}, {"name": "Paychex", "url": "https://www.paychex.com"}, {"name": "Square Payroll", "url": "https://squareup.com/payroll"}], "est": 50000}, "Payroll taxes": {"vendors": [], "est": 3000}, "Recruiting costs": {"vendors": [], "est": 1000}, "Training and development": {"vendors": [], "est": 500}}, "Office": {"Coworking space": {"vendors": [], "est": 350}, "Equipment purchases": {"vendors": [], "est": 2000}, "Internet service": {"vendors": [], "est": 100}, "Office furniture": {"vendors": [], "est": 1000}, "Office rent": {"vendors": [], "est": 1500}, "Office supplies": {"vendors": [], "est": 100}, "Phone service": {"vendors": [{"name": "Google Meet", "url": "https://meet.google.com"}, {"name": "Microsoft Teams", "url": "https://www.microsoft.com/teams"}, {"name": "Slack", "url": "https://slack.com"}, {"name": "Zoom", "url": "https://zoom.us"}], "est": 80}, "Utilities": {"vendors": [], "est": 200}}, "Sales": {"CRM software": {"vendors": [], "est": 50}, "Lead generation services": {"vendors": [], "est": 500}, "Sales commissions": {"vendors": [], "est": 500}, "Sales software": {"vendors": [{"name": "BigCommerce", "url": "https://www.bigcommerce.com"}, {"name": "Shopify", "url": "https://www.shopify.com"}, {"name": "Webflow", "url": "https://webflow.com"}, {"name": "WooCommerce", "url": "https://woocommerce.com"}], "est": 50}}, "Shipping & Logistics": {"Freight services": {"vendors": [], "est": 500}, "Packaging materials": {"vendors": [], "est": 200}, "Shipping costs": {"vendors": [], "est": 200}, "Warehouse storage": {"vendors": [], "est": 500}}, "Miscellaneous": {"Industry association dues": {"vendors": [], "est": 200}, "Membership fees": {"vendors": [], "est": 100}, "Misc business expenses": {"vendors": [], "est": 200}, "Subscription services": {"vendors": [], "est": 50}}, "Inventory": {"Inventory software": {"vendors": [], "est": 50}, "Inventory storage": {"vendors": [], "est": 500}, "Product inventory purchases": {"vendors": [], "est": 2000}, "Raw materials": {"vendors": [], "est": 1000}}}, "Contracts": {"Marketing": {"Advertising Agreement": {"vendors": [], "est": 0}, "Affiliate Marketing Agreement": {"vendors": [], "est": 0}, "Brand Collaboration Agreement": {"vendors": [], "est": 300}, "Influencer Agreement": {"vendors": [], "est": 300}, "Sponsorship Agreement": {"vendors": [], "est": 500}}, "Business Exit": {"Asset Purchase Agreement": {"vendors": [], "est": 500}, "Business Sale Agreement": {"vendors": [], "est": 1000}, "Buy-Sell Agreement": {"vendors": [], "est": 1000}}, "Business Operations": {"Client Services Contract": {"vendors": [], "est": 300}, "Consulting Agreement": {"vendors": [], "est": 500}, "Independent Contractor Agreement": {"vendors": [], "est": 300}, "Master Services Agreement (MSA)": {"vendors": [], "est": 500}, "Service Agreement": {"vendors": [], "est": 300}, "Statement of Work (SOW)": {"vendors": [], "est": 300}}, "Real Estate": {"Commercial Lease Agreement": {"vendors": [], "est": 2000}, "Property Management Agreement": {"vendors": [], "est": 500}, "Sublease Agreement": {"vendors": [], "est": 1000}}, "Intellectual Property": {"Copyright Assignment Agreement": {"vendors": [], "est": 500}, "Licensing Agreement": {"vendors": [], "est": 500}, "Trademark License Agreement": {"vendors": [], "est": 500}, "Work-for-Hire Agreement": {"vendors": [], "est": 300}}, "Technology": {"Data Processing Agreement": {"vendors": [], "est": 300}, "SaaS Agreement": {"vendors": [], "est": 300}, "Software License Agreement": {"vendors": [], "est": 300}, "Website Privacy Policy": {"vendors": [], "est": 200}, "Website Terms of Service": {"vendors": [], "est": 200}}, "Vendors & Suppliers": {"Distribution Agreement": {"vendors": [], "est": 500}, "Manufacturing Agreement": {"vendors": [], "est": 500}, "Purchase Agreement": {"vendors": [], "est": 300}, "Supplier Agreement": {"vendors": [], "est": 300}, "Vendor Agreement": {"vendors": [], "est": 300}}, "Employment": {"Employee Confidentiality Agreement": {"vendors": [], "est": 300}, "Employment Agreement": {"vendors": [], "est": 300}, "Non-Compete Agreement": {"vendors": [], "est": 300}, "Non-Disclosure Agreement (NDA)": {"vendors": [], "est": 300}, "Non-Solicitation Agreement": {"vendors": [], "est": 300}}, "Finance": {"Equity Investment Agreement": {"vendors": [], "est": 1500}, "Investor Agreement": {"vendors": [], "est": 1500}, "Loan Agreement": {"vendors": [], "est": 1000}, "Revenue Sharing Agreement": {"vendors": [], "est": 300}}, "Business Formation": {"Founders Agreement": {"vendors": [], "est": 500}, "Partnership Agreement": {"vendors": [], "est": 500}, "Shareholder Agreement": {"vendors": [], "est": 1000}}, "Risk Protection": {"Indemnification Agreement": {"vendors": [], "est": 300}, "Liability Waiver": {"vendors": [], "est": 200}, "Settlement Agreement": {"vendors": [], "est": 1000}}, "Sales": {"Product Purchase Agreement": {"vendors": [], "est": 300}, "Retail Agreement": {"vendors": [], "est": 300}, "Sales Agreement": {"vendors": [], "est": 300}, "Wholesale Agreement": {"vendors": [], "est": 300}}}, "Legal & Registration": {"Licensing": {"City or county license": {"vendors": [], "est": 100}}, "Registration": {"File with state": {"vendors": [], "est": 100}}, "Federal": {"IRS business tax ID": {"vendors": [], "est": 0}}, "Compliance": {"Liability or business insurance": {"vendors": [], "est": 1200}}, "Legal Documents": {"LLC ownership structure": {"vendors": [], "est": 100}}, "Business Structure": {"LLC, Sole Proprietor, Corporation": {"vendors": [], "est": 500}}, "Legal Protection": {"Protect brand": {"vendors": [], "est": 1500}}, "State": {"Sales tax permit if required": {"vendors": [], "est": 50}}, "Contracts": {"Service or product contracts": {"vendors": [], "est": 300}}}};
+const NFIN_DATA = {"Vision": {"Business vision": {"Long-term goal": {"vendors": []}}}, "Mission": {"Mission statement": {"Purpose of business": {"vendors": []}}}, "Products": {"Product/service list": {"What you sell": {"vendors": []}}}, "Customers": {"Ideal customer": {"Target audience": {"vendors": []}}}, "Revenue": {"Revenue streams": {"How business makes money": {"vendors": []}}}, "Branding": {"Finalize name": {"Confirm availability": {"vendors": []}}, "Logo design": {"Brand symbol": {"vendors": []}}, "Brand colors": {"Brand palette": {"vendors": []}}, "Brand fonts": {"Standard fonts": {"vendors": []}}, "Brand messaging": {"Tone and personality": {"vendors": []}}}, "Social Media": {"Facebook": {"A social media platform": {"vendors": [{"name": "Facebook", "url": "https://www.facebook.com"}]}}, "Instagram": {"A social media platform": {"vendors": [{"name": "Instagram", "url": "https://www.instagram.com"}]}}, "TikTok": {"A social media platform": {"vendors": [{"name": "TikTok", "url": "https://www.tiktok.com"}]}}, "YouTube": {"A video-sharing platform": {"vendors": [{"name": "YouTube", "url": "https://www.youtube.com"}]}}, "Pinterest": {"A visual discovery platform": {"vendors": [{"name": "Pinterest", "url": "https://www.pinterest.com"}]}}, "LinkedIn": {"A professional networking platform": {"vendors": [{"name": "LinkedIn", "url": "https://www.linkedin.com"}]}}, "Twitter / X": {"A real-time social platform": {"vendors": [{"name": "Twitter / X", "url": "https://www.x.com"}]}}}, "Market Research": {"Industry": {"Industry revenue data": {"vendors": [{"name": "Claude", "url": "https://claude.ai"}, {"name": "Perplexity AI", "url": "https://www.perplexity.ai"}]}}, "Customer": {"Age, income, interests": {"vendors": [{"name": "Claude", "url": "https://claude.ai"}, {"name": "Perplexity AI", "url": "https://www.perplexity.ai"}]}}, "Competition": {"Top competitors": {"vendors": [{"name": "Claude", "url": "https://claude.ai"}, {"name": "Perplexity AI", "url": "https://www.perplexity.ai"}]}}, "Pricing": {"Market average": {"vendors": [{"name": "Perplexity AI", "url": "https://www.perplexity.ai"}, {"name": "Claude", "url": "https://claude.ai"}]}}, "Demand": {"Problems to solve": {"vendors": [{"name": "Claude", "url": "https://claude.ai"}, {"name": "Perplexity AI", "url": "https://www.perplexity.ai"}]}}, "Trends": {"Growing or declining": {"vendors": [{"name": "Perplexity AI", "url": "https://www.perplexity.ai"}, {"name": "Claude", "url": "https://claude.ai"}]}}}, "Marketing Strategies": {"Marketing & Content Creation": {"Marketing & Content Creation": {"vendors": [{"name": "ChatGPT", "url": "https://chatgpt.com"}, {"name": "Canva AI", "url": "https://www.canva.com/ai-image-generator/"}, {"name": "Jasper AI", "url": "https://www.jasper.ai"}, {"name": "Copy.ai", "url": "https://www.copy.ai"}, {"name": "Grammarly", "url": "https://www.grammarly.com"}, {"name": "Pictory", "url": "https://pictory.ai"}, {"name": "Synthesia", "url": "https://www.synthesia.io"}, {"name": "Descript", "url": "https://www.descript.com"}, {"name": "Surfer SEO", "url": "https://surferseo.com"}, {"name": "Midjourney", "url": "https://www.midjourney.com"}, {"name": "DALL·E", "url": "https://openai.com/dall-e"}, {"name": "ElevenLabs", "url": "https://elevenlabs.io"}]}}, "Sales & Sales Funnels": {"Sales & Sales Funnels": {"vendors": [{"name": "HubSpot AI", "url": "https://www.hubspot.com/artificial-intelligence"}, {"name": "Salesforce Einstein", "url": "https://www.salesforce.com/products/einstein-ai-solutions/"}, {"name": "Zapier AI", "url": "https://zapier.com/ai"}, {"name": "Tidio AI", "url": "https://www.tidio.com"}, {"name": "Drift", "url": "https://www.drift.com"}]}}, "Email / Newsletter": {"Email / Newsletter": {"vendors": [{"name": "Mailchimp", "url": "https://mailchimp.com"}, {"name": "Beehiiv", "url": "https://www.beehiiv.com"}, {"name": "ConvertKit", "url": "https://convertkit.com"}, {"name": "Constant Contact", "url": "https://www.constantcontact.com"}, {"name": "MailerLite", "url": "https://www.mailerlite.com"}, {"name": "Brevo", "url": "https://www.brevo.com"}, {"name": "GetResponse", "url": "https://www.getresponse.com"}, {"name": "Substack", "url": "https://substack.com"}]}}, "Content / Blog": {"Content / Blog": {"vendors": [{"name": "ChatGPT", "url": "https://chatgpt.com"}, {"name": "Jasper AI", "url": "https://www.jasper.ai"}, {"name": "Copy.ai", "url": "https://www.copy.ai"}, {"name": "Canva AI", "url": "https://www.canva.com"}, {"name": "Pictory", "url": "https://pictory.ai"}, {"name": "Synthesia", "url": "https://www.synthesia.io"}, {"name": "Descript", "url": "https://www.descript.com"}, {"name": "Midjourney", "url": "https://www.midjourney.com"}, {"name": "DALL·E", "url": "https://openai.com/dall-e"}, {"name": "Grammarly", "url": "https://www.grammarly.com"}, {"name": "Surfer SEO", "url": "https://surferseo.com"}, {"name": "ElevenLabs", "url": "https://elevenlabs.io"}]}}}, "Project Management & Productivity": {"Project Management & Productivity": {"Project Management & Productivity": {"vendors": [{"name": "Notion AI", "url": "https://www.notion.so/product/ai"}, {"name": "Monday AI", "url": "https://monday.com/ai"}, {"name": "Asana AI", "url": "https://asana.com/ai"}, {"name": "Microsoft Copilot", "url": "https://copilot.microsoft.com"}, {"name": "Google Gemini", "url": "https://gemini.google.com"}]}}}, "Sales Strategies": {"Paid Ads": {"Paid Ads": {"vendors": []}}, "Referral": {"Referral": {"vendors": []}}}};
+
+const PT_DESCS = {
+  'Net 7':'Payment due within 7 calendar days of invoice date.',
+  'Net 15':'Payment due within 15 calendar days of invoice date.',
+  'Net 30':'Payment due within 30 days. Most common GAAP standard.',
+  'Net 45':'Payment due within 45 days of invoice date.',
+  'Net 60':'Payment due within 60 days. Common for large contracts.',
+  'Net 90':'Payment due within 90 days. Used in extended vendor agreements.',
+  'Due on Receipt':'Payment expected immediately upon receiving the invoice.',
+  '2/10 Net 30':'2% discount if paid within 10 days; full amount due in 30.',
+  '1/15 Net 30':'1% discount if paid within 15 days; full amount due in 30.',
+  'EOM':'Payment due at the end of the calendar month of the invoice.',
+  'COD':'Cash on Delivery — payment collected at time of delivery.',
+  'Prepaid':'Full payment required before service or goods are provided.',
+  'Monthly':'Recurring billing each month for ongoing services.',
+  'Annual':'Recurring billing once per year for ongoing services.'
+};
+
+const FUNDING_TYPES = [
+  'Personal Savings','Business Loan','SBA Loan','Angel Investment','Venture Capital',
+  'Crowdfunding','Friends & Family','Grant','Line of Credit','Equipment Financing',
+  'Invoice Factoring','Revenue-Based Financing','Bootstrapping','Other'
+];
+
+const COLORS = ['#2C5F2E','#4A90D9','#F59E0B','#EF4444','#8B5CF6',
+                '#EC4899','#14B8A6','#F97316','#64748B','#10B981'];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let ST = {
+  tasks:[], runbooks:{}, currentUser:null,
+  settings:{businessName:'',industry:'',stage:'',totalBudget:0,monthlyRevenue:0,
+             launchDate:'',monthlyBudget:0,breakeven:'',fundingAllocs:{}},
+  editTaskId:null, pendingNonfin:null, runbookTaskId:null, currentPlan:'monthly'
+};
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+function save(){
+  try{
+    localStorage.setItem('ll2_tasks',JSON.stringify(ST.tasks));
+    localStorage.setItem('ll2_runbooks',JSON.stringify(ST.runbooks));
+    localStorage.setItem('ll2_settings',JSON.stringify(ST.settings));
+  }catch(e){console.error(e);}
+}
+function load(){
+  try{
+    const t=localStorage.getItem('ll2_tasks'); if(t) ST.tasks=JSON.parse(t);
+    const r=localStorage.getItem('ll2_runbooks'); if(r) ST.runbooks=JSON.parse(r);
+    const s=localStorage.getItem('ll2_settings'); if(s) ST.settings={...ST.settings,...JSON.parse(s)};
+  }catch(e){}
+}
+function getUsers(){ try{return JSON.parse(localStorage.getItem('ll2_users')||'[]');}catch{return[];} }
+function saveUsers(u){ localStorage.setItem('ll2_users',JSON.stringify(u)); }
+function getCodes(){ try{return JSON.parse(localStorage.getItem('ll2_codes')||'[]');}catch{return[];} }
+function saveCodes(c){ localStorage.setItem('ll2_codes',JSON.stringify(c)); }
+function getCU(){ try{return JSON.parse(localStorage.getItem('ll2_cu')||'null');}catch{return null;} }
+function setCU(u){ if(u) localStorage.setItem('ll2_cu',JSON.stringify(u)); else localStorage.removeItem('ll2_cu'); }
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).substr(2,5); }
+function $(id){ return document.getElementById(id); }
+function setText(id,v){ const e=$(id); if(e) e.textContent=v; }
+function fmt(n){ return '$'+(parseFloat(n)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function genCode(){ return 'LL-'+Math.random().toString(36).substr(2,4).toUpperCase()+'-'+Math.random().toString(36).substr(2,4).toUpperCase(); }
+
+// ── AUTH: SEED ADMIN ─────────────────────────────────────────────────────────
+function seedAdmin(){
+  const users=getUsers();
+  if(!users.find(u=>u.email==='cmjacobo30@live.com')){
+    users.push({email:'cmjacobo30@live.com',name:'Admin',role:'admin',code:'ATT-ADMIN-2026',createdAt:new Date().toISOString()});
+    saveUsers(users);
+  }
+}
+
+// ── AUTH: UI ─────────────────────────────────────────────────────────────────
+function switchAuthTab(tab){
+  $('tab-register')?.classList.toggle('active',tab==='register');
+  $('tab-login')?.classList.toggle('active',tab==='login');
+  $('panel-register')?.classList.toggle('active',tab==='register');
+  $('panel-login')?.classList.toggle('active',tab==='login');
+  $('reg-error') && ($('reg-error').style.display='none');
+  $('login-error') && ($('login-error').style.display='none');
+}
+
+function selectRole(role){
+  $('role-pill-admin')?.classList.toggle('selected',role==='admin');
+  $('role-pill-user')?.classList.toggle('selected',role==='user');
+  const g=$('user-biz-code-group');
+  if(g) g.style.display=role==='user'?'block':'none';
+}
+
+function authErr(panel,msg){
+  const e=$(panel+'-error');
+  if(e){ e.textContent=msg; e.style.display='block'; }
+}
+
+function registerUser(){
+  const first=($('reg-first')?.value||'').trim();
+  const last=($('reg-last')?.value||'').trim();
+  const email=($('reg-email')?.value||'').trim().toLowerCase();
+  const role=$('role-pill-admin')?.classList.contains('selected')?'admin':'user';
+  const bizCode=($('reg-biz-code')?.value||'').trim().toUpperCase();
+  if(!first||!email){ authErr('reg','Please fill in your name and email.'); return; }
+  const users=getUsers();
+  if(users.find(u=>u.email===email)){ authErr('reg','An account with this email already exists.'); return; }
+  // User role: validate invite code
+  if(role==='user' && bizCode){
+    const codes=getCodes();
+    const codeObj=codes.find(c=>c.code===bizCode&&!c.used);
+    if(!codeObj){ authErr('reg','Invalid or already-used invite code.'); return; }
+    codeObj.used=true; codeObj.usedBy=email;
+    saveCodes(codes);
+  }
+  const myCode=genCode();
+  const user={email,name:first+' '+last,role,code:myCode,createdAt:new Date().toISOString()};
+  users.push(user); saveUsers(users);
+  // Show step 2
+  $('reg-step1') && ($('reg-step1').style.display='none');
+  $('reg-step2') && ($('reg-step2').style.display='block');
+  setText('reg-welcome-name',first);
+  setText('reg-code-display',myCode);
+  if(role==='user'&&bizCode){
+    const bd=$('reg-biz-code-display');
+    if(bd){ bd.textContent='Admin code: '+bizCode; bd.style.display='block'; }
+  }
+  setCU(user); ST.currentUser=user;
+}
+
+function copyCode(){
+  const code=$('reg-code-display')?.textContent;
+  if(code) navigator.clipboard?.writeText(code).then(()=>showToast('Code copied!'));
+}
+
+function enterApp(){
+  const user=getCU();
+  if(!user){ switchAuthTab('register'); return; }
+  ST.currentUser=user;
+  // Check if user has paid (or is admin)
+  const paid=localStorage.getItem('ll2_paid_'+user.email);
+  if(user.role==='admin'||paid==='1'){ bootApp(); }
+  else{ bootApp(); }
+}
+
+function loginUser(){
+  const email=($('login-email')?.value||'').trim().toLowerCase();
+  const code=($('login-code')?.value||'').trim().toUpperCase();
+  if(!email||!code){ authErr('login','Please enter your email and access code.'); return; }
+  const users=getUsers();
+  const user=users.find(u=>u.email===email&&u.code===code);
+  if(!user){ authErr('login','Email or access code not found. Please check and try again.'); return; }
+  setCU(user); ST.currentUser=user;
+  const paid=localStorage.getItem('ll2_paid_'+user.email);
+  if(user.role==='admin'||paid==='1'){ bootApp(); }
+  else{ bootApp(); }
+}
+
+function signOut(){
+  setCU(null); ST.currentUser=null;
+  $('main-app').style.display='none';
+  // paywall removed
+  $('auth-gate').style.display='flex';
+  // Reset register form
+  $('reg-step1') && ($('reg-step1').style.display='block');
+  $('reg-step2') && ($('reg-step2').style.display='none');
+  $('reg-first') && ($('reg-first').value='');
+  $('reg-last') && ($('reg-last').value='');
+  $('reg-email') && ($('reg-email').value='');
+  $('login-email') && ($('login-email').value='');
+  $('login-code') && ($('login-code').value='');
+}
+
+// ── PAYWALL ──────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+function bootApp(){
+  $('auth-gate').style.display='none';
+  // paywall removed
+  $('main-app').style.display='flex';
+  const u=ST.currentUser;
+  setText('user-display-name',u.name||u.email);
+  const badge=$('user-role-badge');
+  if(badge){ badge.textContent=u.role==='admin'?'Admin':'User'; badge.className='role-badge role-badge-'+(u.role==='admin'?'admin':'user'); }
+  const avatar=$('user-avatar');
+  if(avatar) avatar.textContent=(u.name||u.email).charAt(0).toUpperCase();
+  // Admin-only elements
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=u.role==='admin'?'':'none');
+  load();
+  populateVendorDropdown();
+  renderSettings();
+  showPage('dashboard',null);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+const PAGE_TITLES={'dashboard':'Dashboard','tasks':'Task Board','budget':'Budget Planner',
+  'forecast':'Cash Flow','reports':'Reports','runbook':'RunBook','settings':'Business Info','guide':'How To Use',
+  'nonfin-browser':'Non-Financial Tasks','fin-browser':'Financial Task Library'};
+
+function showPage(page,btn){
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  const el=$('page-'+page);
+  if(el) el.style.display='block';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  setText('topbar-title', PAGE_TITLES[page]||page);
+  if(page==='dashboard') renderDashboard();
+  else if(page==='tasks') renderTaskBoard();
+  else if(page==='nonfin-browser') renderNonfinBrowser();
+  else if(page==='fin-browser') renderFinBrowser();
+  else if(page==='budget') renderBudget();
+  else if(page==='forecast') renderForecast();
+  else if(page==='reports') renderReports();
+  else if(page==='runbook') renderRunbookPage();
+  else if(page==='settings') renderSettings();
+  $('sidebar')?.classList.remove('open');
+}
+
+// ── TASK MODAL ────────────────────────────────────────────────────────────────
+let currentTaskType='financial';
+
+
+// ── TASK MODAL ──────────────────────────────────────────────────────────────
+let _editingTaskId = null;
+let _taskType = 'financial';
+
+function openAddTask(status){
+  _editingTaskId = null;
+  $('modal-title').textContent = 'Add Task';
+  $('save-task-btn').textContent = 'Save Task';
+  ['f-desc','f-est','f-act','f-due','f-vendor','f-vendor-url','f-contact-name','f-contact-email','f-contact-phone']
+    .forEach(id=>{ const e=$(id); if(e) e.value=''; });
+  if($('f-est')){ $('f-est').style.background=''; $('f-est').style.borderColor=''; }
+  $('f-priority').value='medium';
+  $('f-status').value=status||'todo';
+  setTaskType('financial');
+  $('task-modal').style.display='flex';
+}
+
+function openEditTask(id){
+  const task=ST.tasks.find(t=>t.id===id);
+  if(!task) return;
+  _editingTaskId=id;
+  $('modal-title').textContent='Edit Task';
+  $('save-task-btn').textContent='Update Task';
+  const type=task.taskType||'financial';
+  setTaskType(type,true);
+  populateCategorySelect(type);
+  if(task.category){ $('f-category').value=task.category; cascadeSubcategory(true); }
+  if(task.subcategory){ $('f-subcategory').value=task.subcategory; cascadeTaskName(true); }
+  if(task.name){ $('f-name').value=task.name; } cascadeVendors(true);
+  $('f-desc').value=task.description||'';
+  $('f-priority').value=task.priority||'medium';
+  $('f-status').value=task.status||'todo';
+  if(type==='financial'){
+    $('f-est').value=task.estimatedCost||'';
+    $('f-act').value=task.actualCost||'';
+    $('f-est').style.background=''; $('f-est').style.borderColor='';
+  }
+  $('f-due').value=task.dueDate||'';
+  if(task.vendor){ $('f-vendor').value=task.vendor; const o=Array.from($('f-vendor-select').options).find(x=>x.value===task.vendor); if(o) $('f-vendor-select').value=task.vendor; }
+  $('f-vendor-url').value=task.vendorUrl||'';
+  $('f-contact-name').value=task.contactName||'';
+  $('f-contact-email').value=task.contactEmail||'';
+  $('f-contact-phone').value=task.contactPhone||'';
+  $('task-modal').style.display='flex';
+}
+
+function setTaskType(type,skipPopulate){
+  _taskType=type;
+  const isFin=type==='financial';
+  const accStyle='border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600;';
+  const dimStyle='border:2px solid var(--border2);background:transparent;color:var(--text2);font-weight:500;';
+  if($('ttype-financial')) $('ttype-financial').setAttribute('style','flex:1;padding:10px;border-radius:8px;text-align:center;cursor:pointer;font-size:12px;'+(isFin?accStyle:dimStyle));
+  if($('ttype-nonfinancial')) $('ttype-nonfinancial').setAttribute('style','flex:1;padding:10px;border-radius:8px;text-align:center;cursor:pointer;font-size:12px;'+(isFin?dimStyle:accStyle));
+  if($('financial-fields')) $('financial-fields').style.display=isFin?'':'none';
+  if(!skipPopulate) populateCategorySelect(type);
+}
+
+function populateCategorySelect(type){
+  const sel=$('f-category');
+  const data=type==='financial'?FIN_DATA:NFIN_DATA;
+  sel.innerHTML='<option value="">-- Select Category --</option>';
+  Object.keys(data).sort().forEach(cat=>{ const o=document.createElement('option'); o.value=cat; o.textContent=cat; sel.appendChild(o); });
+  $('f-subcategory').innerHTML='<option value="">-- Select Subcategory --</option>';
+  $('f-name').innerHTML='<option value="">-- Select Task --</option>';
+  $('f-vendor-select').innerHTML='<option value="">-- Select Vendor --</option>';
+}
+
+function cascadeSubcategory(skipClear){
+  const cat=$('f-category').value;
+  const data=_taskType==='financial'?FIN_DATA:NFIN_DATA;
+  const sub=$('f-subcategory');
+  sub.innerHTML='<option value="">-- Select Subcategory --</option>';
+  if(!skipClear){ $('f-name').innerHTML='<option value="">-- Select Task --</option>'; $('f-vendor-select').innerHTML='<option value="">-- Select Vendor --</option>'; }
+  if(cat&&data[cat]) Object.keys(data[cat]).sort().forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sub.appendChild(o); });
+}
+
+function cascadeTaskName(skipClear){
+  const cat=$('f-category').value, sub=$('f-subcategory').value;
+  const data=_taskType==='financial'?FIN_DATA:NFIN_DATA;
+  const sel=$('f-name');
+  sel.innerHTML='<option value="">-- Select Task --</option>';
+  if(!skipClear) $('f-vendor-select').innerHTML='<option value="">-- Select Vendor --</option>';
+  if(cat&&sub&&data[cat]&&data[cat][sub]) Object.keys(data[cat][sub]).sort().forEach(task=>{ const o=document.createElement('option'); o.value=task; o.textContent=task; sel.appendChild(o); });
+}
+
+function cascadeVendors(skipEst){
+  const cat=$('f-category').value,sub=$('f-subcategory').value,task=$('f-name').value;
+  const data=_taskType==='financial'?FIN_DATA:NFIN_DATA;
+  const sel=$('f-vendor-select');
+  sel.innerHTML='<option value="">-- Select Vendor --</option>';
+  $('f-vendor').value=''; $('f-vendor-url').value='';
+  if(cat&&sub&&task&&data[cat]&&data[cat][sub]&&data[cat][sub][task]){
+    const entry=data[cat][sub][task];
+    (entry.vendors||[]).forEach(v=>{ const o=document.createElement('option'); o.value=v.name; o.dataset.url=v.url; o.textContent=v.name; sel.appendChild(o); });
+    if(!skipEst&&_taskType==='financial'&&entry.est>0){
+      $('f-est').value=entry.est;
+      $('f-est').style.background='#FFFACD';
+      $('f-est').style.borderColor='#DAA520';
+    }
+  }
+}
+
+function clearEstHighlight(){
+  if($('f-est')){ $('f-est').style.background=''; $('f-est').style.borderColor=''; }
+}
+
+function applyVendorPreset(){
+  const sel=$('f-vendor-select');
+  const opt=sel.options[sel.selectedIndex];
+  if(opt&&opt.value){ $('f-vendor').value=opt.value; $('f-vendor-url').value=opt.dataset.url||''; }
+}
+
+function closeModal(){
+  $('task-modal').style.display='none';
+  _editingTaskId=null;
+}
+
+function saveTask(){
+  const name=($('f-name')?.value||'').trim()||($('f-subcategory')?.value||'').trim();
+  if(!name){ alert('Please select a Task Name.'); return; }
+  const type=_taskType;
+  const task={
+    id:_editingTaskId||Date.now().toString(),
+    taskType:type,
+    name,
+    category:$('f-category')?.value||'',
+    subcategory:$('f-subcategory')?.value||'',
+    description:$('f-desc')?.value||'',
+    priority:$('f-priority')?.value||'medium',
+    estimatedCost:type==='financial'?(parseFloat($('f-est')?.value)||0):0,
+    actualCost:type==='financial'?(parseFloat($('f-act')?.value)||0):0,
+    dueDate:$('f-due')?.value||'',
+    status:$('f-status')?.value||'todo',
+    vendor:$('f-vendor')?.value||'',
+    vendorUrl:$('f-vendor-url')?.value||'',
+    contactName:$('f-contact-name')?.value||'',
+    contactEmail:$('f-contact-email')?.value||'',
+    contactPhone:$('f-contact-phone')?.value||'',
+    createdAt:_editingTaskId?(ST.tasks.find(t=>t.id===_editingTaskId)?.createdAt||Date.now()):Date.now()
+  };
+  if(_editingTaskId){ const idx=ST.tasks.findIndex(t=>t.id===_editingTaskId); if(idx>=0) ST.tasks[idx]=task; else ST.tasks.push(task); }
+  else ST.tasks.push(task);
+  saveState(); closeModal(); renderCurrentPage();
+}
+
+function deleteTask(id){
+  if(ST.currentUser&&ST.currentUser.role!=='admin'){ alert('Only admins can delete tasks.'); return; }
+  if(!confirm('Delete this task?')) return;
+  ST.tasks=ST.tasks.filter(t=>t.id!==id);
+  saveState(); renderCurrentPage();
+}
+
+// ── FINANCIAL TASK BROWSER ──────────────────────────────────────────────────
+function renderFinBrowser(){
+  const container=$('fin-browser-list');
+  if(!container) return;
+  const search=($('fin-browser-search')?.value||'').toLowerCase();
+  const filterCat=$('fin-browser-cat')?.value||'';
+  const catSel=$('fin-browser-cat');
+  if(catSel&&catSel.options.length<=1) Object.keys(FIN_DATA).sort().forEach(cat=>{ const o=document.createElement('option'); o.value=cat; o.textContent=cat; catSel.appendChild(o); });
+  let html='';
+  Object.keys(FIN_DATA).sort().forEach(cat=>{
+    if(filterCat&&cat!==filterCat) return;
+    let catHtml='';
+    Object.keys(FIN_DATA[cat]).sort().forEach(sub=>{
+      Object.keys(FIN_DATA[cat][sub]).sort().forEach(task=>{
+        const entry=FIN_DATA[cat][sub][task];
+        if(search&&!(cat+' '+sub+' '+task).toLowerCase().includes(search)) return;
+        const vendors=entry.vendors||[];
+        const estStr=entry.est>0?`<span style="background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">~$${entry.est.toLocaleString()}</span>`:'<span style="color:var(--text3);font-size:11px;">—</span>';
+        const vStr=vendors.length?vendors.map(v=>`<a href="${v.url}" target="_blank" style="color:var(--accent);font-size:11px;">${v.name}</a>`).join(', '):'<span style="color:var(--text3);font-size:11px;">—</span>';
+        catHtml+=`<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">${task}</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">${sub}</div><div style="margin-top:4px;">${vStr}</div></div>
+          <div style="text-align:right;min-width:80px;">${estStr}</div>
+          <button class="btn btn-primary" style="padding:6px 14px;font-size:12px;white-space:nowrap;" onclick='addFinTask(${JSON.stringify(cat)},${JSON.stringify(sub)},${JSON.stringify(task)},${entry.est},${JSON.stringify(vendors)})'>+ Add</button>
+        </div>`;
+      });
+    });
+    if(catHtml) html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;"><div style="padding:12px 16px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;">${cat}</div>${catHtml}</div>`;
+  });
+  container.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--text3);">No tasks match your search.</div>';
+}
+
+function addFinTask(cat,sub,task,est,vendors){
+  setTaskType('financial');
+  populateCategorySelect('financial');
+  $('f-category').value=cat; cascadeSubcategory(true);
+  $('f-subcategory').value=sub; cascadeTaskName(true);
+  const sel=$('f-name');
+  if(!Array.from(sel.options).find(o=>o.value===task)){ const o=document.createElement('option'); o.value=task; o.textContent=task; sel.appendChild(o); }
+  sel.value=task;
+  const vSel=$('f-vendor-select');
+  vSel.innerHTML='<option value="">-- Select Vendor --</option>';
+  (vendors||[]).forEach(v=>{ const o=document.createElement('option'); o.value=v.name; o.dataset.url=v.url; o.textContent=v.name; vSel.appendChild(o); });
+  if(est>0){ $('f-est').value=est; $('f-est').style.background='#FFFACD'; $('f-est').style.borderColor='#DAA520'; }
+  $('modal-title').textContent='Add Financial Task';
+  $('save-task-btn').textContent='Save Task';
+  _editingTaskId=null;
+  $('task-modal').style.display='flex';
+}
+
+
+
+function openNonfinBrowser(){
+  showPage('nonfin-browser',null);
+}
+
+function renderNonfinBrowser(){
+  const container=$('nonfin-browser-list');
+  if(!container) return;
+  const groups={};
+  NONFIN_PRESETS.forEach(t=>{
+    if(!groups[t.category]) groups[t.category]=[];
+    groups[t.category].push(t);
+  });
+  let html='';
+  Object.entries(groups).forEach(([cat,tasks])=>{
+    html+=`<div class="nonfin-group"><div class="nonfin-group-title">${cat}</div><div class="nonfin-items">`;
+    tasks.forEach(t=>{
+      const alreadyAdded=ST.tasks.some(st=>st.name===t.name&&st.taskType==='nonfinancial');
+      html+=`<div class="nonfin-item${alreadyAdded?' nonfin-added':''}">
+        <div><div class="nonfin-item-name">${t.name}</div><div class="nonfin-item-desc">${t.description||''}</div></div>
+        <button class="btn btn-primary btn-sm" ${alreadyAdded?'disabled':''} onclick="promptAddNonfin(${JSON.stringify(t).replace(/"/g,'&quot;')})">
+          ${alreadyAdded?'Added':'Add to Board'}
+        </button>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+
+function promptAddNonfin(task){
+  ST.pendingNonfin=task;
+  setText('nonfin-task-name',task.name);
+  setText('nonfin-task-desc',task.description||'');
+  $('nonfin-modal').style.display='flex';
+}
+
+function confirmAddNonfin(){
+  if(ST.pendingNonfin){
+    const t=ST.pendingNonfin;
+    ST.tasks.push({
+      id:uid(),name:t.name,taskType:'nonfinancial',category:t.category||'Non-Financial',
+      status:'todo',priority:'medium',vendorName:t.vendor||'',vendorWebsite:t.vendorUrl||'',
+      contactName:'',contactEmail:'',contactPhone:'',notes:t.description||'',
+      createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+    });
+    save(); renderAll(); showPage('tasks',null);
+  }
+  closeNonfinModal();
+}
+
+function closeNonfinModal(){
+  $('nonfin-modal').style.display='none';
+  ST.pendingNonfin=null;
+}
+
+// ── TASK BOARD RENDER ────────────────────────────────────────────────────────
+function renderTaskBoard(){
+  const cols={todo:[],inprogress:[],done:[]};
+  ST.tasks.forEach(t=>{ (cols[t.status]||cols.todo).push(t); });
+  ['todo','inprogress','done'].forEach(col=>{
+    const el=$('col-'+col);
+    if(!el) return;
+    const cnt=$('count-'+col);
+    if(cnt) cnt.textContent=cols[col].length;
+    if(!cols[col].length){ el.innerHTML='<div class="empty-col" style="text-align:center;color:var(--text3);font-size:12px;padding:16px">No tasks</div>'; return; }
+    el.innerHTML=cols[col].map(buildCard).join('');
+  });
+}
+
+function buildCard(task){
+  const isNF=task.taskType==='nonfinancial';
+  const badge=isNF
+    ?'<span class="task-type-badge nf-badge">Non-Financial</span>'
+    :'<span class="task-type-badge fin-badge">Financial</span>';
+  const costHtml=isNF
+    ?'<div style="font-size:11px;color:#7C3AED;font-weight:600;margin-top:4px">No Cost</div>'
+    :`<div style="display:flex;gap:12px;margin-top:4px;font-size:11px;color:var(--text2)">
+        <span>Est: <b>${fmt(task.estCost)}</b></span>
+        <span>Actual: <b>${fmt(task.actualCost)}</b></span>
+      </div>`;
+  const websiteHtml=task.vendorWebsite
+    ?`<a href="${task.vendorWebsite}" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;color:var(--accent);text-decoration:underline">${task.vendorWebsite.replace(/^https?:\/\//,'')}</a>`
+    :'';
+  const rbBtn=(!isNF&&task.status==='done')
+    ?`<button class="btn-runbook" onclick="event.stopPropagation();openRunbookModal('${task.id}')">📋 Create RunBook</button>`
+    :'';
+  const pri={high:'🔴',medium:'🟡',low:'🟢'}[task.priority]||'';
+  return `<div class="task-card" onclick="openEditTask('${task.id}')">
+    <div class="task-card-header">
+      <span class="task-name">${pri} ${task.name}</span>
+      ${badge}
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:2px">${task.category||''}</div>
+    ${costHtml}
+    ${task.vendorName?`<div style="font-size:11px;margin-top:4px;color:var(--text2)">${task.vendorName} ${websiteHtml}</div>`:''}
+    ${task.contactName?`<div style="font-size:10px;color:var(--text3);margin-top:2px">👤 ${task.contactName}${task.contactPhone?' · '+task.contactPhone:''}</div>`:''}
+    ${task.dueDate?`<div style="font-size:10px;color:var(--text3);margin-top:2px">📅 Due ${task.dueDate}</div>`:''}
+    ${rbBtn}
+  </div>`;
+}
+
+// ── RUNBOOK ───────────────────────────────────────────────────────────────────
+function openRunbookModal(taskId){
+  ST.runbookTaskId=taskId;
+  // Reset
+  ['rb-contact-name','rb-contact-phone','rb-contact-email','rb-start-date','rb-end-date',
+   'rb-renewal-date','rb-renewal-terms','rb-contract-value','rb-last-order','rb-next-order','rb-notes']
+    .forEach(id=>{ const e=$(id); if(e) e.value=''; });
+  $('rb-payment-terms') && ($('rb-payment-terms').value='');
+  $('rb-rating') && ($('rb-rating').value='0');
+  $('pt-desc-box') && ($('pt-desc-box').textContent='');
+  updateStars(0);
+  // Prefill from task
+  if(taskId){
+    const task=ST.tasks.find(t=>t.id===taskId);
+    if(task){
+      $('rb-contact-name') && ($('rb-contact-name').value=task.contactName||'');
+      $('rb-contact-phone') && ($('rb-contact-phone').value=task.contactPhone||'');
+      $('rb-contact-email') && ($('rb-contact-email').value=task.contactEmail||'');
+      setText('runbook-modal-title','RunBook — '+task.name);
+    }
+  }
+  // Load existing
+  const ex=ST.runbooks[taskId];
+  if(ex){
+    Object.entries(ex).forEach(([k,v])=>{ const e=$(k); if(e) e.value=v; });
+    updateStars(parseInt($('rb-rating')?.value)||0);
+    showPaymentTermDesc();
+  }
+  $('runbook-modal').style.display='flex';
+}
+
+function closeRunbookModal(){
+  $('runbook-modal').style.display='none';
+  ST.runbookTaskId=null;
+}
+
+function handleStarClick(e){
+  const star=e.target.closest('.star');
+  if(!star) return;
+  const val=parseInt(star.dataset.val)||0;
+  $('rb-rating') && ($('rb-rating').value=val);
+  updateStars(val);
+}
+
+function updateStars(n){
+  document.querySelectorAll('#star-rating .star').forEach((s,i)=>{
+    s.classList.toggle('filled',i<n);
+    s.style.color=i<n?'#F59E0B':'var(--border2)';
+  });
+}
+
+function showPaymentTermDesc(){
+  const val=$('rb-payment-terms')?.value||'';
+  const box=$('pt-desc-box');
+  if(box){ box.textContent=PT_DESCS[val]||''; box.style.display=PT_DESCS[val]?'block':'none'; }
+}
+
+function saveRunbook(){
+  const id=ST.runbookTaskId;
+  if(!id){ alert('No task selected.'); return; }
+  const data={};
+  ['rb-contact-name','rb-contact-phone','rb-contact-email','rb-start-date','rb-end-date',
+   'rb-renewal-date','rb-renewal-terms','rb-contract-value','rb-payment-terms',
+   'rb-last-order','rb-next-order','rb-notes','rb-rating'].forEach(fid=>{
+    const e=$(fid); if(e) data[fid]=e.value;
+  });
+  ST.runbooks[id]=data;
+  save(); closeRunbookModal();
+  showToast('RunBook saved!');
+  renderRunbookPage();
+}
+
+function renderRunbookPage(){
+  const container=$('runbook-list');
+  if(!container) return;
+  const entries=Object.entries(ST.runbooks);
+  if(!entries.length){
+    container.innerHTML='<div style="text-align:center;padding:3rem;color:var(--text3)">No RunBook entries yet. Complete a Financial Task and click "Create RunBook" on its card.</div>';
+    return;
+  }
+  const isAdmin=ST.currentUser?.role==='admin';
+  container.innerHTML=entries.map(([taskId,rb])=>{
+    const task=ST.tasks.find(t=>t.id===taskId);
+    const taskName=task?task.name:'Deleted Task';
+    const rating=parseInt(rb['rb-rating'])||0;
+    const stars='★'.repeat(rating)+'☆'.repeat(4-rating);
+    const ptLabel=rb['rb-payment-terms']||'';
+    const cv=parseFloat(rb['rb-contract-value'])||0;
+    return `<div class="runbook-card">
+      <div class="runbook-header">
+        <span class="runbook-task-name">${taskName}</span>
+        <span style="color:#F59E0B;font-size:1.2rem">${stars}</span>
+      </div>
+      <div class="runbook-meta">
+        ${rb['rb-contact-name']?`<div class="runbook-field"><span class="rb-label">Contact</span><span>${rb['rb-contact-name']}</span></div>`:''}
+        ${rb['rb-contact-phone']?`<div class="runbook-field"><span class="rb-label">Phone</span><span>${rb['rb-contact-phone']}</span></div>`:''}
+        ${rb['rb-contact-email']?`<div class="runbook-field"><span class="rb-label">Email</span><span>${rb['rb-contact-email']}</span></div>`:''}
+        ${rb['rb-start-date']?`<div class="runbook-field"><span class="rb-label">Start</span><span>${rb['rb-start-date']}</span></div>`:''}
+        ${rb['rb-end-date']?`<div class="runbook-field"><span class="rb-label">End</span><span>${rb['rb-end-date']}</span></div>`:''}
+        ${rb['rb-renewal-date']?`<div class="runbook-field"><span class="rb-label">Renewal</span><span>${rb['rb-renewal-date']}</span></div>`:''}
+        ${rb['rb-renewal-terms']?`<div class="runbook-field"><span class="rb-label">Terms</span><span>${rb['rb-renewal-terms']}</span></div>`:''}
+        ${cv?`<div class="runbook-field"><span class="rb-label">Contract Value</span><span>${fmt(cv)}</span></div>`:''}
+        ${ptLabel?`<div class="runbook-field"><span class="rb-label">Payment Terms</span><span>${ptLabel}</span></div>`:''}
+        ${rb['rb-last-order']?`<div class="runbook-field"><span class="rb-label">Last Order</span><span>${rb['rb-last-order']}</span></div>`:''}
+        ${rb['rb-next-order']?`<div class="runbook-field"><span class="rb-label">Next Order</span><span>${rb['rb-next-order']}</span></div>`:''}
+        ${rb['rb-notes']?`<div class="runbook-field" style="grid-column:1/-1"><span class="rb-label">Notes</span><span>${rb['rb-notes']}</span></div>`:''}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="openRunbookModal('${taskId}')">Edit</button>
+        ${isAdmin?`<button class="btn btn-sm" style="background:#FEE2E2;color:#dc2626;border:none;border-radius:6px;padding:4px 12px;cursor:pointer" onclick="deleteRunbook('${taskId}')">Delete</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteRunbook(taskId){
+  if(ST.currentUser?.role!=='admin') return;
+  if(!confirm('Delete this RunBook entry?')) return;
+  delete ST.runbooks[taskId];
+  save(); renderRunbookPage();
+}
+
+// ── FUNDING ───────────────────────────────────────────────────────────────────
+function renderFunding(){
+  const container=$('funding-checkboxes');
+  if(!container) return;
+  const allocs=ST.settings.fundingAllocs||{};
+  container.innerHTML=FUNDING_TYPES.map(type=>{
+    const key=type.replace(/[^a-z0-9]/gi,'_');
+    const checked=allocs[type]!==undefined;
+    const amt=allocs[type]||'';
+    return `<div class="funding-item${checked?' selected':''}">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;flex:1">
+        <input type="checkbox" ${checked?'checked':''} onchange="toggleFunding('${type}',this.checked)">
+        <span>${type}</span>
+      </label>
+      <div class="funding-amount-wrap" style="display:${checked?'flex':'none'};align-items:center;gap:4px;margin-top:4px">
+        <span style="font-size:12px;color:var(--text2)">$</span>
+        <input type="number" class="form-control" style="width:90px;padding:3px 6px;font-size:12px" min="0"
+          placeholder="0" value="${amt}" oninput="setFundingAmt('${type}',this.value)">
+      </div>
+    </div>`;
+  }).join('');
+  updateFundingTotal();
+}
+
+function toggleFunding(type,checked){
+  const allocs=ST.settings.fundingAllocs||{};
+  if(checked){ allocs[type]=0; }
+  else{ delete allocs[type]; }
+  ST.settings.fundingAllocs=allocs;
+  save(); renderFunding();
+}
+
+function setFundingAmt(type,val){
+  const allocs=ST.settings.fundingAllocs||{};
+  allocs[type]=parseFloat(val)||0;
+  ST.settings.fundingAllocs=allocs;
+  save(); updateFundingTotal();
+}
+
+function updateFundingTotal(){
+  const allocs=ST.settings.fundingAllocs||{};
+  const total=Object.values(allocs).reduce((a,b)=>a+(parseFloat(b)||0),0);
+  const disp=$('funding-total-display');
+  if(disp) disp.textContent='Total Funding: '+fmt(total);
+  const disp2=$('total-funding-display');
+  if(disp2) disp2.textContent=fmt(total);
+  ST.settings._fundingTotal=total;
+  updateBudgetStats(total);
+}
+
+function updateBudgetStats(funding){
+  const actual=ST.tasks.filter(t=>t.taskType!=='nonfinancial').reduce((a,t)=>a+(t.actualCost||0),0);
+  const budget=parseFloat(ST.settings.totalBudget)||funding;
+  const remaining=funding-actual;
+  const pct=budget>0?Math.round((actual/budget)*100):0;
+  const monthly=parseFloat(ST.settings.monthlyBudget)||1;
+  const runway=actual<funding?Math.round((funding-actual)/monthly):0;
+  setText('remaining-budget',fmt(remaining));
+  setText('pct-used',pct+'%');
+  setText('runway',runway+' mo');
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+function renderSettings(){
+  const s=ST.settings;
+  $('biz-name') && ($('biz-name').value=s.businessName||'');
+  $('biz-stage') && ($('biz-stage').value=s.stage||'Idea / Planning');
+  $('total-budget') && ($('total-budget').value=s.totalBudget||'');
+  $('monthly-revenue') && ($('monthly-revenue').value=s.monthlyRevenue||'');
+  $('launch-date') && ($('launch-date').value=s.launchDate||'');
+  $('monthly-budget') && ($('monthly-budget').value=s.monthlyBudget||'');
+  $('breakeven') && ($('breakeven').value=s.breakeven||'');
+  // User info
+  const u=ST.currentUser;
+  if(u){
+    setText('settings-code',u.code||'—');
+    setText('settings-email',u.email||'—');
+    setText('settings-role',u.role==='admin'?'Admin':'User');
+    setText('settings-joined',u.createdAt?new Date(u.createdAt).toLocaleDateString():'—');
+    setText('settings-sub','Active');
+  }
+  // Admin invite
+  const inv=$('admin-invite-section');
+  if(inv) inv.style.display=u?.role==='admin'?'block':'none';
+  renderFunding();
+}
+
+function saveSettings(){
+  ST.settings.businessName=$('biz-name')?.value?.trim()||'';
+  ST.settings.industry=$('biz-industry')?.value||'';
+  ST.settings.stage=$('biz-stage')?.value||'';
+  ST.settings.totalBudget=parseFloat($('total-budget')?.value)||0;
+  ST.settings.monthlyRevenue=parseFloat($('monthly-revenue')?.value)||0;
+  ST.settings.launchDate=$('launch-date')?.value||'';
+  ST.settings.monthlyBudget=parseFloat($('monthly-budget')?.value)||0;
+  ST.settings.breakeven=$('breakeven')?.value||'';
+  save();
+  setText('sidebar-biz-name',ST.settings.businessName||'My Startup');
+  updateFundingTotal();
+}
+
+function generateUserInvite(){
+  if(ST.currentUser?.role!=='admin'){ alert('Admin only.'); return; }
+  const code=genCode();
+  const codes=getCodes();
+  codes.push({code,createdBy:ST.currentUser.email,createdAt:new Date().toISOString(),used:false});
+  saveCodes(codes);
+  const el=$('invite-code-display');
+  if(el) el.innerHTML=`<div style="font-family:monospace;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:.1em;margin-bottom:8px">${code}</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px">Share this code with your User. They'll use it when registering.</div>
+    <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard?.writeText('${code}').then(()=>showToast('Copied!'))">Copy Code</button>`;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const fin=ST.tasks.filter(t=>t.taskType!=='nonfinancial');
+  const totalEst=fin.reduce((a,t)=>a+(t.estCost||0),0);
+  const totalAct=fin.reduce((a,t)=>a+(t.actualCost||0),0);
+  const done=ST.tasks.filter(t=>t.status==='done').length;
+  const total=ST.tasks.length;
+  const funding=ST.settings._fundingTotal||(Object.values(ST.settings.fundingAllocs||{}).reduce((a,b)=>a+(parseFloat(b)||0),0));
+  const remaining=funding-totalAct;
+  const pct=totalEst>0?Math.round((totalAct/totalEst)*100):0;
+  const grid=$('metric-grid');
+  if(grid){
+    grid.innerHTML=`
+      <div class="metric-card"><div class="metric-label">Total Tasks</div><div class="metric-val">${total}</div></div>
+      <div class="metric-card"><div class="metric-label">Completed</div><div class="metric-val">${done}</div></div>
+      <div class="metric-card"><div class="metric-label">Estimated Spend</div><div class="metric-val">${fmt(totalEst)}</div></div>
+      <div class="metric-card"><div class="metric-label">Actual Spend</div><div class="metric-val">${fmt(totalAct)}</div></div>
+      <div class="metric-card"><div class="metric-label">Remaining Budget</div><div class="metric-val" style="color:${remaining<0?'#dc2626':'var(--accent)'}">${fmt(remaining)}</div></div>
+      <div class="metric-card"><div class="metric-label">% Budget Used</div><div class="metric-val">${pct}%</div></div>`;
+  }
+  // Alerts
+  const alerts=$('dashboard-alerts');
+  if(alerts){
+    const msgs=[];
+    if(totalAct>totalEst&&totalEst>0) msgs.push(`⚠️ You are ${fmt(totalAct-totalEst)} over budget.`);
+    const overdue=ST.tasks.filter(t=>t.dueDate&&t.status!=='done'&&new Date(t.dueDate)<new Date()).length;
+    if(overdue) msgs.push(`📅 ${overdue} overdue task${overdue>1?'s':''}.`);
+    alerts.innerHTML=msgs.map(m=>`<div style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:6px">${m}</div>`).join('');
+  }
+  setText('donutTotal',fmt(totalEst));
+  setText('sidebar-biz-name',ST.settings.businessName||'My Startup');
+  renderCharts(fin,done,total-done);
+}
+
+let charts={};
+function destroyChart(id){ if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function renderCharts(fin,done,remaining){
+  // Donut: budget by category
+  const cats=[...new Set(fin.map(t=>t.category).filter(Boolean))];
+  const catEst=cats.map(c=>fin.filter(t=>t.category===c).reduce((a,t)=>a+(t.estCost||0),0));
+  destroyChart('donutChart');
+  if($('donutChart')&&cats.length){
+    charts['donutChart']=new Chart($('donutChart'),{
+      type:'doughnut',
+      data:{labels:cats,datasets:[{data:catEst,backgroundColor:COLORS,borderWidth:2}]},
+      options:{responsive:true,cutout:'65%',plugins:{legend:{display:false}}}
+    });
+    const leg=$('donut-legend');
+    if(leg) leg.innerHTML=cats.map((c,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></span>${c}</span>`).join('');
+  }
+  // Timeline: by month
+  const byMonth={};
+  fin.forEach(t=>{
+    const m=t.dueDate?t.dueDate.substr(0,7):'No Date';
+    if(!byMonth[m]) byMonth[m]={est:0,act:0};
+    byMonth[m].est+=(t.estCost||0);
+    byMonth[m].act+=(t.actualCost||0);
+  });
+  const months=Object.keys(byMonth).sort();
+  destroyChart('timelineChart');
+  if($('timelineChart')&&months.length){
+    charts['timelineChart']=new Chart($('timelineChart'),{
+      type:'bar',
+      data:{labels:months,datasets:[
+        {label:'Planned',data:months.map(m=>byMonth[m].est),backgroundColor:'rgba(44,95,46,.7)'},
+        {label:'Actual',data:months.map(m=>byMonth[m].act),backgroundColor:'rgba(245,158,11,.5)'}
+      ]},
+      options:{responsive:true,scales:{y:{beginAtZero:true}},plugins:{legend:{display:false}}}
+    });
+  }
+  // Priority chart
+  const pri={High:0,Medium:0,Low:0};
+  fin.forEach(t=>{ const k=t.priority?t.priority.charAt(0).toUpperCase()+t.priority.slice(1):'Medium'; if(pri[k]!==undefined) pri[k]+=(t.estCost||0); });
+  destroyChart('priorityChart');
+  if($('priorityChart')){
+    charts['priorityChart']=new Chart($('priorityChart'),{
+      type:'bar',
+      data:{labels:['High','Medium','Low'],datasets:[{data:[pri.High,pri.Medium,pri.Low],backgroundColor:['#EF4444','#F59E0B','#10B981'],borderRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+    });
+  }
+  // Status chart
+  const ip=ST.tasks.filter(t=>t.status==='inprogress').length;
+  const td=ST.tasks.filter(t=>t.status==='todo').length;
+  destroyChart('statusChart');
+  if($('statusChart')){
+    charts['statusChart']=new Chart($('statusChart'),{
+      type:'doughnut',
+      data:{labels:['To Do','In Progress','Done'],datasets:[{data:[td,ip,done],backgroundColor:['#e5e7eb','#F59E0B','#2C5F2E'],borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}}}
+    });
+  }
+}
+
+// ── BUDGET TABLE ──────────────────────────────────────────────────────────────
+function renderBudget(){
+  const tbody=$('budget-tbody');
+  if(!tbody) return;
+  const catFilter=($('filter-category')?.value)||'';
+  const statFilter=($('filter-status')?.value)||'';
+  const fin=ST.tasks.filter(t=>t.taskType!=='nonfinancial')
+    .filter(t=>!catFilter||t.category===catFilter)
+    .filter(t=>!statFilter||t.status===statFilter);
+  // Populate category filter
+  const catSel=$('filter-category');
+  if(catSel&&catSel.options.length<3){
+    const cats=[...new Set(ST.tasks.map(t=>t.category).filter(Boolean))];
+    catSel.innerHTML='<option value="">All Categories</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+  }
+  let totalEst=0,totalAct=0;
+  if(!fin.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:2rem">No expenses yet.</td></tr>';
+    setText('total-est','$0.00'); setText('total-act','$0.00'); return;
+  }
+  const isAdmin=ST.currentUser?.role==='admin';
+  tbody.innerHTML=fin.map(t=>{
+    const est=t.estCost||0,act=t.actualCost||0;
+    totalEst+=est; totalAct+=act;
+    const v=act-est;
+    const url=t.vendorWebsite?`<a href="${t.vendorWebsite}" target="_blank" style="color:var(--accent)">${t.vendorName||'Link'}</a>`:t.vendorName||'—';
+    return `<tr>
+      <td>${t.name}</td>
+      <td><span class="${t.taskType==='nonfinancial'?'nf-badge':'fin-badge'}" style="font-size:10px;padding:2px 6px">${t.taskType==='nonfinancial'?'Non-Financial':'Financial'}</span></td>
+      <td>${t.category||'—'}</td>
+      <td>${t.priority||'—'}</td>
+      <td><span class="status-badge status-${t.status}">${{todo:'To Do',inprogress:'In Progress',done:'Done'}[t.status]||t.status}</span></td>
+      <td>${fmt(est)}</td>
+      <td>${fmt(act)}</td>
+      <td>${t.dueDate||'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openEditTask('${t.id}')">Edit</button> ${isAdmin?`<button class="btn btn-sm" style="background:#FEE2E2;color:#dc2626;border:none;border-radius:4px;padding:2px 8px;cursor:pointer" onclick="deleteTask('${t.id}')">Del</button>`:''}</td>
+    </tr>`;
+  }).join('');
+  setText('total-est',fmt(totalEst));
+  setText('total-act',fmt(totalAct));
+}
+
+// ── FORECAST / CASH FLOW ──────────────────────────────────────────────────────
+function renderForecast(){
+  const monthly=parseFloat(ST.settings.monthlyRevenue)||0;
+  const monthlyBudget=parseFloat(ST.settings.monthlyBudget)||0;
+  const funding=ST.settings._fundingTotal||(Object.values(ST.settings.fundingAllocs||{}).reduce((a,b)=>a+(parseFloat(b)||0),0));
+  let balance=funding;
+  const months=[],balances=[],incomes=[],expenses=[];
+  const now=new Date();
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    const label=d.toLocaleString('default',{month:'short',year:'2-digit'});
+    months.push(label); incomes.push(monthly); expenses.push(monthlyBudget);
+    balance=balance+monthly-monthlyBudget;
+    balances.push(balance);
+  }
+  const fg=$('forecast-metrics');
+  if(fg){
+    fg.innerHTML=`
+      <div class="metric-card"><div class="metric-label">Starting Balance</div><div class="metric-val">${fmt(funding)}</div></div>
+      <div class="metric-card"><div class="metric-label">Monthly Revenue</div><div class="metric-val">${fmt(monthly)}</div></div>
+      <div class="metric-card"><div class="metric-label">12-Month Projected Balance</div><div class="metric-val" style="color:${balances[11]<0?'#dc2626':'var(--accent)'}">${fmt(balances[11])}</div></div>`;
+  }
+  destroyChart('cashflowChart');
+  if($('cashflowChart')){
+    charts['cashflowChart']=new Chart($('cashflowChart'),{
+      type:'line',
+      data:{labels:months,datasets:[
+        {label:'Projected Balance',data:balances,borderColor:'#2C5F2E',backgroundColor:'rgba(44,95,46,0.1)',fill:true,tension:0.3},
+        {label:'Monthly Revenue',data:incomes,borderColor:'#4A90D9',borderDash:[4,4],tension:0.3},
+        {label:'Monthly Expenses',data:expenses,borderColor:'#EF4444',borderDash:[4,4],tension:0.3}
+      ]},
+      options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}}}
+    });
+  }
+  const burn=$('burnrate-table');
+  if(burn){
+    burn.innerHTML=`<table style="width:100%;font-size:12px;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border)">Month</th>
+      <th style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">Revenue</th>
+      <th style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">Expenses</th>
+      <th style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">Net</th>
+      <th style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">Balance</th></tr></thead>
+      <tbody>${months.map((m,i)=>{
+        const net=incomes[i]-expenses[i];
+        return `<tr style="border-bottom:1px solid var(--border2)">
+          <td style="padding:5px 6px">${m}</td>
+          <td style="text-align:right;padding:5px 6px;color:#2C5F2E">${fmt(incomes[i])}</td>
+          <td style="text-align:right;padding:5px 6px;color:#dc2626">${fmt(expenses[i])}</td>
+          <td style="text-align:right;padding:5px 6px;color:${net>=0?'#2C5F2E':'#dc2626'}">${fmt(net)}</td>
+          <td style="text-align:right;padding:5px 6px;font-weight:600;color:${balances[i]<0?'#dc2626':'var(--text)'}">${fmt(balances[i])}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  }
+}
+
+// ── REPORTS ───────────────────────────────────────────────────────────────────
+function renderReports(){
+  const fin=ST.tasks.filter(t=>t.taskType!=='nonfinancial');
+  const cats=[...new Set(fin.map(t=>t.category).filter(Boolean))];
+  const catEst=cats.map(c=>fin.filter(t=>t.category===c).reduce((a,t)=>a+(t.estCost||0),0));
+  const catAct=cats.map(c=>fin.filter(t=>t.category===c).reduce((a,t)=>a+(t.actualCost||0),0));
+  destroyChart('reportCatChart');
+  if($('reportCatChart')&&cats.length){
+    charts['reportCatChart']=new Chart($('reportCatChart'),{
+      type:'bar',
+      data:{labels:cats,datasets:[
+        {label:'Estimated',data:catEst,backgroundColor:'rgba(44,95,46,.7)',borderRadius:4},
+        {label:'Actual',data:catAct,backgroundColor:'rgba(245,158,11,.7)',borderRadius:4}
+      ]},
+      options:{indexAxis:'y',responsive:true,plugins:{legend:{position:'top'}}}
+    });
+  }
+  // Health bars
+  const hb=$('health-bars');
+  if(hb){
+    hb.innerHTML=cats.map((c,i)=>{
+      const est=catEst[i],act=catAct[i];
+      const pct=est>0?Math.min(100,Math.round((act/est)*100)):0;
+      const color=pct>100?'#dc2626':pct>75?'#F59E0B':'#2C5F2E';
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+          <span>${c}</span><span>${pct}%</span>
+        </div>
+        <div style="background:var(--border2);border-radius:4px;height:6px">
+          <div style="width:${pct}%;background:${color};border-radius:4px;height:6px;transition:.3s"></div>
+        </div>
+      </div>`;
+    }).join('') || '<p style="color:var(--text3);font-size:12px">Add financial tasks to see health metrics.</p>';
+  }
+  // Summary stats
+  const ss=$('summary-stats');
+  if(ss){
+    const totalEst=fin.reduce((a,t)=>a+(t.estCost||0),0);
+    const totalAct=fin.reduce((a,t)=>a+(t.actualCost||0),0);
+    const done=ST.tasks.filter(t=>t.status==='done').length;
+    const compPct=ST.tasks.length>0?Math.round((done/ST.tasks.length)*100):0;
+    const variance=totalAct-totalEst;
+    ss.innerHTML=`
+      <div><div style="font-size:11px;color:var(--text3)">Completion Rate</div><div style="font-size:1.4rem;font-weight:700;color:var(--accent)">${compPct}%</div></div>
+      <div><div style="font-size:11px;color:var(--text3)">Total Variance</div><div style="font-size:1.4rem;font-weight:700;color:${variance>0?'#dc2626':'#2C5F2E'}">${variance>=0?'+':''}${fmt(variance)}</div></div>
+      <div><div style="font-size:11px;color:var(--text3)">RunBook Entries</div><div style="font-size:1.4rem;font-weight:700;color:var(--accent)">${Object.keys(ST.runbooks).length}</div></div>`;
+  }
+}
+
+// ── CSV EXPORT ────────────────────────────────────────────────────────────────
+function exportCSV(){
+  const headers=['Name','Type','Category','Priority','Status','Est Cost','Actual Cost','Due Date','Vendor','Website','Contact','Email','Phone'];
+  const rows=ST.tasks.map(t=>[t.name,t.taskType,t.category,t.priority,t.status,t.estCost||'',t.actualCost||'',t.dueDate||'',t.vendorName||'',t.vendorWebsite||'',t.contactName||'',t.contactEmail||'',t.contactPhone||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='LaunchLedger-tasks.csv'; a.click();
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────────
+function renderAll(){
+  renderDashboard();
+  renderTaskBoard();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg){
+  let t=document.getElementById('ll-toast');
+  if(!t){
+    t=document.createElement('div');
+    t.id='ll-toast';
+    t.style.cssText='position:fixed;bottom:24px;right:24px;background:#2C5F2E;color:#fff;padding:10px 20px;border-radius:8px;z-index:9999;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg; t.style.opacity='1'; t.style.display='block';
+  clearTimeout(t._to); t._to=setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.style.display='none',300);},2500);
+}
+
+// ── MISSING CSS FOR NEW ELEMENTS ──────────────────────────────────────────────
+(function addStyles(){
+  const style=document.createElement('style');
+  style.textContent=`
+    .nonfin-group{margin-bottom:20px}
+    .nonfin-group-title{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border2)}
+    .nonfin-items{display:grid;gap:8px}
+    .nonfin-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border2)}
+    .nonfin-item-name{font-size:13px;font-weight:600;color:var(--text)}
+    .nonfin-item-desc{font-size:11px;color:var(--text2);margin-top:2px}
+    .nonfin-added{opacity:.6}
+    .fin-badge{background:#DCFCE7;color:#166534;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;white-space:nowrap}
+    .nf-badge{background:#EDE9FE;color:#5B21B6;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;white-space:nowrap}
+    .task-type-badge{display:inline-flex;align-items:center}
+    .task-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+    .task-name{font-size:13px;font-weight:600;color:var(--text);flex:1}
+    .btn-runbook{display:block;width:100%;margin-top:8px;padding:5px 10px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;text-align:center}
+    .btn-runbook:hover{background:var(--accent);color:#fff}
+    .runbook-card{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:14px}
+    .runbook-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .runbook-task-name{font-size:14px;font-weight:700;color:var(--text)}
+    .runbook-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+    .runbook-field{display:flex;flex-direction:column;gap:2px}
+    .rb-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);font-weight:600}
+    .funding-item{display:flex;flex-direction:column;padding:8px 10px;border:1px solid var(--border2);border-radius:8px;background:var(--surface)}
+    .funding-item.selected{border-color:var(--accent);background:var(--accent-bg)}
+    .metric-card{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 16px}
+    .metric-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+    .metric-val{font-size:1.4rem;font-weight:800;color:var(--text)}
+    .status-todo{background:#e5e7eb;color:#374151;font-size:10px;padding:2px 6px;border-radius:20px}
+    .status-inprogress{background:#FEF3C7;color:#92400E;font-size:10px;padding:2px 6px;border-radius:20px}
+    .status-done{background:#DCFCE7;color:#166534;font-size:10px;padding:2px 6px;border-radius:20px}
+    .role-badge-admin{background:#FEF3C7;color:#92400E;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+    .role-badge-user{background:#DBEAFE;color:#1E40AF;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+    .report-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .report-stat{background:var(--surface);border-radius:8px;padding:12px}
+    .rs-label{font-size:11px;color:var(--text3)}
+    .rs-val{font-size:1.3rem;font-weight:700;color:var(--text)}
+    .pt-desc{background:var(--accent-bg);color:var(--accent);border-radius:6px;padding:6px 10px;font-size:11px;margin-top:4px;display:none}
+  `;
+  document.head.appendChild(style);
+})();
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  seedAdmin();
+  selectRole('admin'); // default to admin tab
+  const user=getCU();
+  if(user){
+    ST.currentUser=user;
+    const paid=localStorage.getItem('ll2_paid_'+user.email);
+    bootApp();
+  }
+});
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW registered', r.scope))
+      .catch(e => console.log('SW error', e));
+  });
+}
+</script>
+
+</body>
+</html>

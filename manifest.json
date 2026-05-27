@@ -1,0 +1,27 @@
+{
+  "name": "LaunchLedger — Business Budget Tracker",
+  "short_name": "LaunchLedger",
+  "description": "Track your startup budget, expenses, and cash flow in one place.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8F6F1",
+  "theme_color": "#2C5F2E",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "screenshots": []
+}
