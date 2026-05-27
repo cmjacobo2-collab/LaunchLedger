@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaunchLedger — Business Budget Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#F8F6F1;--surface:#FFFFFF;--surface2:#F2EFE8;--border:#E8E3D9;--border2:#D4CEBC;
+--text:#1A1714;--text2:#6B6458;--text3:#9B9185;
+--accent:#2C5F2E;--accent2:#4A8C4D;--accent-bg:#EBF4EB;
+--amber:#B07D2A;--amber-bg:#FDF5E6;--amber-border:#E8D5A3;
+--red:#C0392B;--red-bg:#FEF0EE;--red-border:#F5C6C0;
+--blue:#1B5E8A;--blue-bg:#EBF4FB;--blue-border:#B8D8F0;
+--purple:#5B3B8C;--purple-bg:#F2ECFB;--purple-border:#CDB8EE;
+--radius:12px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+}
+
+/* AUTH GATE */
+#auth-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-shell{width:100%;max-width:440px;}
+.auth-brand{text-align:center;margin-bottom:36px;}
+.auth-brand-logo{font-family:'DM Serif Display',serif;font-size:32px;color:var(--text);letter-spacing:-.5px;}
+.auth-brand-tagline{font-size:13px;color:var(--text3);margin-top:5px;letter-spacing:.02em;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;box-shadow:0 4px 32px rgba(0,0,0,.07);animation:slideUp .3s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.auth-tab-row{display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:28px;gap:2px;}
+.auth-tab{flex:1;padding:9px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);background:transparent;cursor:pointer;transition:.15s;}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.auth-panel{display:none;}
+.auth-panel.active{display:block;}
+.auth-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;letter-spacing:.03em;}
+.auth-input{width:100%;padding:10px 13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.auth-input:focus{border-color:var(--accent);}
+.auth-group{margin-bottom:16px;}
+.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.auth-btn{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;margin-top:8px;}
+.auth-btn-primary{background:var(--accent);color:#fff;}
+.auth-btn-primary:hover{background:var(--accent2);}
+.auth-btn-primary:active{transform:scale(.98);}
+.auth-error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);border-radius:var(--radius-sm);padding:9px 13px;font-size:12px;margin-bottom:14px;display:none;}
+.auth-error.show{display:block;}
+.code-box{background:var(--text);border-radius:12px;padding:24px;text-align:center;margin:20px 0;}
+.code-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:10px;}
+.code-value{font-family:'DM Serif Display',serif;font-size:34px;letter-spacing:.18em;color:#fff;user-select:all;}
+.code-hint{font-size:12px;color:rgba(255,255,255,.4);margin-top:8px;line-height:1.5;}
+.code-copy-btn{margin-top:14px;border:1px solid rgba(255,255,255,.18);background:transparent;color:rgba(255,255,255,.7);padding:7px 18px;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;transition:.15s;}
+.code-copy-btn:hover{background:rgba(255,255,255,.08);}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--text3);font-size:12px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.auth-footer{text-align:center;font-size:12px;color:var(--text3);margin-top:18px;line-height:1.6;}
+.auth-success-icon{width:48px;height:48px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.auth-success-icon svg{width:22px;height:22px;stroke:var(--accent);}
+
+/* PAYWALL */
+#paywall-gate{position:fixed;inset:0;background:var(--bg);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+#paywall-gate.open{display:flex;}
+.pw-shell{width:100%;max-width:560px;padding:20px 0;}
+.pw-brand{text-align:center;margin-bottom:28px;}
+.pw-brand-logo{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text);letter-spacing:-.5px;}
+.pw-eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px;}
+.pw-headline{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);margin-bottom:8px;line-height:1.2;}
+.pw-sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:24px;}
+.pw-trial-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);border:1px solid #c8e6c9;color:var(--accent);font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;margin-bottom:24px;}
+.plan-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:24px;}
+.plan-toggle-track{width:44px;height:24px;border-radius:12px;background:var(--border2);position:relative;cursor:pointer;transition:.2s;flex-shrink:0;}
+.plan-toggle-track.annual{background:var(--accent);}
+.plan-toggle-thumb{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.plan-toggle-track.annual .plan-toggle-thumb{left:23px;}
+.plan-toggle-label{font-size:13px;font-weight:500;color:var(--text2);}
+.plan-toggle-label.active{color:var(--text);}
+.save-badge{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.04em;}
+.plan-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.plan-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:22px;cursor:pointer;transition:.15s;position:relative;}
+.plan-card:hover{border-color:var(--border2);}
+.plan-card.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);}
+.plan-card.featured{border-color:var(--accent);}
+.plan-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 12px;border-radius:10px;letter-spacing:.05em;white-space:nowrap;}
+.plan-name{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+.plan-price{font-family:'DM Serif Display',serif;font-size:32px;color:var(--text);line-height:1;}
+.plan-period{font-size:12px;color:var(--text3);margin-top:3px;}
+.plan-features{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
+.plan-feature{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);}
+.plan-feature-check{width:14px;height:14px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.plan-feature-check svg{width:8px;height:8px;stroke:var(--accent);stroke-width:3;}
+.pw-payment-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;}
+.pw-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.pw-section-title svg{width:14px;height:14px;color:var(--text3);}
+.pw-card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pw-input{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-input-group{margin-bottom:10px;}
+.pw-input-label{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:4px;display:block;}
+.pw-order-summary{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;}
+.pw-order-row{display:flex;justify-content:space-between;padding:4px 0;color:var(--text2);}
+.pw-order-total{display:flex;justify-content:space-between;padding:10px 0 0;border-top:1px solid var(--border2);font-weight:600;color:var(--text);font-size:14px;margin-top:6px;}
+.pw-pay-btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.pw-pay-btn:hover{background:var(--accent2);}
+.pw-pay-btn:active{transform:scale(.99);}
+.pw-pay-btn.loading{opacity:.7;cursor:wait;}
+.pw-security{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text3);margin-top:12px;}
+.pw-security svg{width:12px;height:12px;}
+.pw-success-screen{display:none;text-align:center;padding:20px 0;}
+.pw-success-screen.show{display:block;}
+.pw-success-icon{width:64px;height:64px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+.pw-success-icon svg{width:28px;height:28px;stroke:var(--accent);}
+/* Subscription banner in app */
+.sub-banner{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius-sm);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--amber);margin-bottom:16px;}
+.sub-banner-upgrade{background:var(--amber);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+/* USER PILL */
+.user-pill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 5px;font-size:12px;color:var(--text2);}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+.user-name{font-weight:500;color:var(--text);}
+.signout-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 0 0 8px;font-family:inherit;border-left:1px solid var(--border2);margin-left:2px;}
+.signout-btn:hover{color:var(--red);}
+
+/* APP */
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--text);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo-mark{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;letter-spacing:-.5px}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.sidebar-nav{padding:16px 12px;flex:1}
+.nav-section{margin-bottom:24px}
+.nav-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:0 12px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.65);font-size:13px;font-weight:400;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:500}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.8}
+.nav-item.active svg{opacity:1}
+.sidebar-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.biz-tag{background:rgba(255,255,255,.06);border-radius:8px;padding:10px 12px}
+.biz-name{font-size:13px;font-weight:500;color:#fff}
+.biz-stage{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.main{overflow-y:auto;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)}
+.topbar-actions{display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.page{padding:28px 32px;display:none}
+.page.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow)}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.metric-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.metric-value{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);line-height:1}
+.metric-sub{font-size:12px;color:var(--text3);margin-top:6px}
+.metric-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-green{background:var(--accent-bg);color:var(--accent)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow)}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.chart-title{font-size:14px;font-weight:500;color:var(--text)}
+.chart-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.chart-wrap{position:relative;height:220px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.task-columns{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.task-col{background:var(--surface2);border-radius:var(--radius);padding:16px;min-height:400px}
+.col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.col-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.col-count{background:var(--border2);color:var(--text2);font-size:11px;font-weight:600;padding:2px 7px;border-radius:12px}
+.col-todo .col-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.col-inprogress .col-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.col-done .col-title::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;cursor:pointer;transition:all .15s}
+.task-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.task-category{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.task-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;line-height:1.3}
+.task-desc{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.4}
+.task-meta{display:flex;align-items:center;justify-content:space-between}
+.task-cost{font-size:13px;font-weight:600;color:var(--text)}
+.task-due{font-size:11px;color:var(--text3)}
+.task-due.overdue{color:var(--red)}
+.add-task-btn{width:100%;border:1.5px dashed var(--border2);border-radius:var(--radius-sm);padding:10px;text-align:center;font-size:12px;color:var(--text3);cursor:pointer;background:transparent;transition:all .15s;font-family:inherit}
+.add-task-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:10px 14px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);font-weight:500}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+.cat-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.priority-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px}
+.priority-high{background:var(--red)}
+.priority-med{background:var(--amber)}
+.priority-low{background:var(--accent)}
+tfoot td{padding:12px 14px;font-weight:600;font-size:13px;border-top:2px solid var(--border2);color:var(--text)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius);padding:28px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:'DM Serif Display',serif;font-size:20px}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;border-radius:6px;font-size:18px;line-height:1;transition:.15s}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;letter-spacing:.03em}
+.form-control{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+.form-control:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239B9185' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.section-title{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:16px}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-key{font-size:13px;color:var(--text2)}
+.stat-val{font-size:13px;font-weight:600;color:var(--text)}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+.divider{height:1px;background:var(--border);margin:24px 0}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.donut-total{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text)}
+.donut-label{font-size:11px;color:var(--text3)}
+.alert{border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.alert-amber{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber)}
+.alert-red{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.alert-green{background:var(--accent-bg);border:1px solid #c8e6c9;color:var(--accent)}
+@media(max-width:1100px){.metric-grid{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="auth-shell">
+    <div class="auth-brand">
+      <div class="auth-brand-logo">LaunchLedger</div>
+      <div class="auth-brand-tagline">Startup Budget Tracker &mdash; your data, always saved</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tab-row">
+        <button class="auth-tab active" id="tab-register" onclick="switchAuthTab('register')">New User</button>
+        <button class="auth-tab" id="tab-login" onclick="switchAuthTab('login')">Return User</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="auth-panel active" id="panel-register">
+        <div id="reg-error" class="auth-error"></div>
+        <div id="reg-step1">
+          <div class="auth-row">
+            <div class="auth-group"><label class="auth-label">First Name</label><input class="auth-input" id="reg-first" placeholder="Jane" autocomplete="given-name"></div>
+            <div class="auth-group"><label class="auth-label">Last Name</label><input class="auth-input" id="reg-last" placeholder="Smith" autocomplete="family-name"></div>
+          </div>
+          <div class="auth-group"><label class="auth-label">Email Address</label><input class="auth-input" id="reg-email" type="email" placeholder="jane@company.com" autocomplete="email"></div>
+          <button class="auth-btn auth-btn-primary" id="reg-btn" onclick="registerUser()">Create My Tracker &rarr;</button>
+        </div>
+        <div id="reg-step2" style="display:none">
+          <div style="text-align:center;padding:8px 0 4px">
+            <div class="auth-success-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <div style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px">You're all set!</div>
+            <div style="font-size:13px;color:var(--text2)">Welcome, <span id="reg-welcome-name" style="font-weight:600;color:var(--text)"></span></div>
+          </div>
+          <div class="code-box">
+            <div class="code-label">Your Access Code</div>
+            <div class="code-value" id="reg-code-display">LL-XXXX-XXXX</div>
+            <div class="code-hint">Save this code. Enter it + your email<br>to access your tracker from any device.</div>
+            <button class="code-copy-btn" onclick="copyCode()">Copy Code</button>
+          </div>
+          <button class="auth-btn auth-btn-primary" onclick="enterApp()">Open My Tracker &rarr;</button>
+        </div>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="auth-panel" id="panel-login">
+        <div id="login-error" class="auth-error"></div>
+        <div class="auth-group">
+          <label class="auth-label">Access Code</label>
+          <input class="auth-input" id="login-code" placeholder="LL-A3B9-72XK" style="font-size:15px;letter-spacing:.1em;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" autocomplete="off">
+        </div>
+        <div class="auth-group">
+          <label class="auth-label">Email Address</label>
+          <input class="auth-input" id="login-email" type="email" placeholder="jane@company.com" autocomplete="email">
+        </div>
+        <button class="auth-btn auth-btn-primary" id="login-btn" onclick="loginUser()">Access My Tracker &rarr;</button>
+        <div class="auth-divider">or</div>
+        <div style="text-align:center;font-size:13px;color:var(--text2)">
+          New here? <button onclick="switchAuthTab('register')" style="background:none;border:none;color:var(--accent);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0">Create your free tracker &rarr;</button>
+        </div>
+      </div>
+    </div>
+    <div class="auth-footer">Data is stored securely in your browser.<br>Use your code + email to return from any device.</div>
+  </div>
+</div>
+
+<!-- PAYWALL GATE -->
+<div id="paywall-gate">
+  <div class="pw-shell">
+    <div class="pw-brand">
+      <div class="pw-brand-logo">LaunchLedger</div>
+    </div>
+
+    <!-- Main paywall view -->
+    <div id="pw-main">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="pw-eyebrow">Your free trial is over</div>
+        <div class="pw-headline">Unlock your full tracker</div>
+        <div class="pw-sub">You've had a chance to explore LaunchLedger free. Choose a plan to keep all your data, charts, and startup progress — and never lose a number.</div>
+        <div class="pw-trial-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          All your data is saved and waiting
+        </div>
+      </div>
+
+      <!-- Billing toggle -->
+      <div class="plan-toggle">
+        <span class="plan-toggle-label active" id="lbl-monthly">Monthly</span>
+        <div class="plan-toggle-track" id="billing-toggle" onclick="toggleBilling()">
+          <div class="plan-toggle-thumb"></div>
+        </div>
+        <span class="plan-toggle-label" id="lbl-annual">Annual &nbsp;<span class="save-badge">SAVE 17%</span></span>
+      </div>
+
+      <!-- Plan cards -->
+      <div class="plan-cards">
+        <div class="plan-card selected" id="card-monthly" onclick="selectPlan('monthly')">
+          <div class="plan-name">Monthly</div>
+          <div class="plan-price">$20</div>
+          <div class="plan-period">per month, billed monthly</div>
+          <div class="plan-features">
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>Full tracker access</div>
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>All charts &amp; reports</div>
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>CSV export</div>
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>Cancel anytime</div>
+          </div>
+        </div>
+        <div class="plan-card featured" id="card-annual" onclick="selectPlan('annual')">
+          <div class="plan-badge">BEST VALUE</div>
+          <div class="plan-name">Annual</div>
+          <div class="plan-price" id="annual-price">$199</div>
+          <div class="plan-period">one-time · saves $41/year</div>
+          <div class="plan-features">
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>Everything in Monthly</div>
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>12 months included</div>
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>Priority support</div>
+            <div class="plan-feature"><div class="plan-feature-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>Early feature access</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment form -->
+      <div class="pw-payment-section">
+        <div class="pw-section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Payment Details
+        </div>
+        <div class="pw-input-group">
+          <label class="pw-input-label">Name on card</label>
+          <input class="pw-input" id="pw-cardholder" placeholder="Jane Smith">
+        </div>
+        <div class="pw-input-group">
+          <label class="pw-input-label">Card number</label>
+          <input class="pw-input" id="pw-cardnum" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)">
+        </div>
+        <div class="pw-card-row">
+          <div class="pw-input-group">
+            <label class="pw-input-label">Expiry</label>
+            <input class="pw-input" id="pw-expiry" placeholder="MM / YY" maxlength="7" oninput="fmtExpiry(this)">
+          </div>
+          <div class="pw-input-group">
+            <label class="pw-input-label">CVV</label>
+            <input class="pw-input" id="pw-cvv" placeholder="123" maxlength="4" type="password">
+          </div>
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div class="pw-order-summary" id="pw-order-summary">
+        <div class="pw-order-row"><span id="pw-plan-label">Monthly Plan</span><span id="pw-plan-price">$20.00</span></div>
+        <div class="pw-order-row"><span>Tax</span><span>$0.00</span></div>
+        <div class="pw-order-total"><span>Total today</span><span id="pw-total">$20.00</span></div>
+      </div>
+
+      <div id="pw-pay-error" class="auth-error" style="margin-bottom:12px;"></div>
+
+      <button class="pw-pay-btn" id="pw-pay-btn" onclick="processPayment()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span id="pw-pay-label">Pay $20.00 &amp; Unlock Access</span>
+      </button>
+      <div class="pw-security">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        256-bit SSL encryption &nbsp;&middot;&nbsp; Secure checkout &nbsp;&middot;&nbsp; Cancel anytime
+      </div>
+
+      <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3);">
+        Already paid? <button onclick="restoreAccess()" style="background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:0;">Restore access &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Success screen -->
+    <div class="pw-success-screen" id="pw-success">
+      <div class="pw-success-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+      <div style="font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:8px;">Payment confirmed!</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.6;">Your subscription is now active. Welcome to LaunchLedger Pro.</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;text-align:left;">
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Subscription Summary</div>
+        <div class="pw-order-row"><span style="color:var(--text2)">Plan</span><span id="success-plan-name" style="font-weight:500;color:var(--text)">Monthly</span></div>
+        <div class="pw-order-row"><span style="color:var(--text2)">Access code</span><span id="success-code" style="font-family:monospace;letter-spacing:.08em;font-size:12px;color:var(--text)">--</span></div>
+        <div class="pw-order-row"><span style="color:var(--text2)">Next billing</span><span id="success-renewal" style="font-weight:500;color:var(--text)">--</span></div>
+      </div>
+      <button class="pw-pay-btn" onclick="enterAppFromPaywall()">Open My Tracker &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="main-app" style="display:none">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">LaunchLedger</div>
+    <div class="logo-sub">Startup Budget Tracker</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <button class="nav-item active" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('tasks',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Task Board
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Financials</div>
+      <button class="nav-item" onclick="showPage('budget',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Budget Planner
+      </button>
+      <button class="nav-item" onclick="showPage('forecast',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Cash Flow
+      </button>
+      <button class="nav-item" onclick="showPage('reports',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        Reports
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Settings</div>
+      <button class="nav-item" onclick="showPage('settings',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Business Info
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="biz-tag">
+      <div class="biz-name" id="sidebar-biz-name">My Startup</div>
+      <div class="biz-stage" id="sidebar-biz-stage">Pre-Revenue &middot; Planning</div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+<div class="topbar">
+  <div class="topbar-title" id="topbar-title">Dashboard</div>
+  <div class="topbar-actions">
+    <div class="user-pill">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="user-name" id="user-display-name">User</span>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </button>
+    <button class="btn btn-primary btn-sm" onclick="openAddTask()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Expense
+    </button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div id="sub-banner-wrap"></div>
+  <div style="margin-bottom:20px" id="dashboard-alerts"></div>
+  <div class="metric-grid" id="metric-grid"></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Budget Allocation</div><div class="chart-sub">By category</div></div></div>
+      <div style="position:relative;height:220px;display:flex;align-items:center;justify-content:center">
+        <canvas id="donutChart" role="img" aria-label="Donut chart of budget allocation by category"></canvas>
+        <div class="donut-center"><div class="donut-total" id="donutTotal">$0</div><div class="donut-label">Total Budget</div></div>
+      </div>
+      <div class="legend" id="donut-legend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Spend Timeline</div><div class="chart-sub">Planned vs Actual by month</div></div></div>
+      <div class="chart-wrap"><canvas id="timelineChart" role="img" aria-label="Bar chart of planned vs actual spend by month"></canvas></div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#2C5F2E"></span>Planned</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#4A8C4D;opacity:.5"></span>Actual</span>
+      </div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Spending by Priority</div><div class="chart-sub">High &middot; Medium &middot; Low</div></div></div>
+      <div class="chart-wrap"><canvas id="priorityChart" role="img" aria-label="Doughnut chart of spending grouped by priority level"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div><div class="chart-title">Task Completion</div><div class="chart-sub">Status breakdown</div></div></div>
+      <div class="chart-wrap"><canvas id="statusChart" role="img" aria-label="Bar chart of tasks by completion status"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="page" id="page-tasks">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <p style="font-size:13px;color:var(--text2)">Click any card to edit it. Change the status dropdown to move tasks between columns.</p>
+    <button class="btn btn-primary btn-sm" onclick="openAddTask()">+ Add Task</button>
+  </div>
+  <div class="task-columns">
+    <div class="task-col col-todo">
+      <div class="col-header"><div class="col-title">To Do<span class="col-count" id="count-todo">0</span></div></div>
+      <div id="col-todo"></div>
+      <button class="add-task-btn" onclick="openAddTask('todo')">+ Add task</button>
+    </div>
+    <div class="task-col col-inprogress">
+      <div class="col-header"><div class="col-title">In Progress<span class="col-count" id="count-inprogress">0</span></div></div>
+      <div id="col-inprogress"></div>
+      <button class="add-task-btn" onclick="openAddTask('inprogress')">+ Add task</button>
+    </div>
+    <div class="task-col col-done">
+      <div class="col-header"><div class="col-title">Completed<span class="col-count" id="count-done">0</span></div></div>
+      <div id="col-done"></div>
+      <button class="add-task-btn" onclick="openAddTask('done')">+ Add task</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGET -->
+<div class="page" id="page-budget">
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 class="section-title" style="margin:0">All Expenses</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="form-control form-select" style="width:160px;padding:7px 30px 7px 10px" id="filter-category" onchange="renderBudgetTable()"><option value="">All Categories</option></select>
+        <select class="form-control form-select" style="width:130px;padding:7px 30px 7px 10px" id="filter-status" onchange="renderBudgetTable()">
+          <option value="">All Statuses</option><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Expense</th><th>Category</th><th>Priority</th><th>Status</th><th>Est. Cost</th><th>Actual Cost</th><th>Due Date</th><th>Actions</th></tr></thead>
+        <tbody id="budget-tbody"></tbody>
+        <tfoot><tr><td colspan="4">Total</td><td id="total-est">$0</td><td id="total-act">$0</td><td colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CASH FLOW -->
+<div class="page" id="page-forecast">
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px" id="forecast-metrics"></div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="chart-header"><div class="chart-title">12-Month Cash Flow Projection</div></div>
+    <div style="position:relative;height:300px"><canvas id="cashflowChart" role="img" aria-label="Line chart of 12-month cash flow projection"></canvas></div>
+  </div>
+  <div class="card">
+    <h3 class="section-title" style="font-size:16px;margin-bottom:12px">Monthly Burn Rate</h3>
+    <div id="burnrate-table"></div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div class="page" id="page-reports">
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title" style="margin-bottom:4px">Category Breakdown</div>
+      <div class="chart-sub" style="margin-bottom:16px">Estimated vs Actual spend</div>
+      <div style="position:relative;height:260px"><canvas id="reportCatChart" role="img" aria-label="Horizontal bar chart of estimated vs actual spend by category"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" style="margin-bottom:4px">Budget Health Score</div>
+      <div class="chart-sub" style="margin-bottom:16px">Category-level tracking</div>
+      <div id="health-bars"></div>
+    </div>
+  </div>
+  <div style="margin-top:20px" class="card">
+    <h3 style="font-size:14px;font-weight:500;margin-bottom:14px">Summary Statistics</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" id="summary-stats"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div class="settings-grid">
+    <div class="card">
+      <h3 class="section-title">Business Profile</h3>
+      <div class="form-group"><label class="form-label">Business Name</label><input class="form-control" id="biz-name" placeholder="My Startup" oninput="saveSettings()"></div>
+      <div class="form-group"><label class="form-label">Industry</label>
+        <select class="form-control form-select" id="biz-industry" onchange="saveSettings()">
+          <option>Technology / SaaS</option><option>E-commerce / Retail</option><option>Food &amp; Beverage</option><option>Health &amp; Wellness</option><option>Consulting / Services</option><option>Creative / Media</option><option>Manufacturing</option><option>Real Estate</option><option>Other</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Business Stage</label>
+        <select class="form-control form-select" id="biz-stage" onchange="saveSettings()">
+          <option>Idea / Planning</option><option>MVP / Pre-Launch</option><option>Early Revenue</option><option>Growth</option>
+        </select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Total Budget ($)</label><input class="form-control" id="total-budget" type="number" placeholder="50000" oninput="saveSettings()"></div>
+        <div class="form-group"><label class="form-label">Monthly Revenue ($)</label><input class="form-control" id="monthly-revenue" type="number" placeholder="0" oninput="saveSettings()"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Launch Date</label><input class="form-control" id="launch-date" type="date" oninput="saveSettings()"></div>
+      <div class="divider"></div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px">
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Your Account</div>
+        <div class="stat-row"><span class="stat-key">Access Code</span><span class="stat-val" id="settings-code" style="font-family:monospace;letter-spacing:.1em;font-size:12px">--</span></div>
+        <div class="stat-row"><span class="stat-key">Email</span><span class="stat-val" id="settings-email" style="font-size:12px">--</span></div>
+        <div class="stat-row"><span class="stat-key">Member Since</span><span class="stat-val" id="settings-joined">--</span></div>
+        <div class="stat-row"><span class="stat-key">Subscription</span><span class="stat-val" id="settings-sub">--</span></div>
+        <div class="stat-row"><span class="stat-key">Renews</span><span class="stat-val" id="settings-renews">--</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="section-title">Funding Overview</h3>
+      <div class="form-group"><label class="form-label">Funding Type</label>
+        <select class="form-control form-select" id="funding-type" onchange="saveSettings()">
+          <option>Self-Funded / Bootstrapped</option><option>Friends &amp; Family</option><option>Angel Investment</option><option>Seed / VC</option><option>SBA Loan</option><option>Crowdfunding</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Total Funding ($)</label><input class="form-control" id="total-funding" type="number" placeholder="0" oninput="saveSettings()"></div>
+      <div class="form-group"><label class="form-label">Monthly Operating Budget ($)</label><input class="form-control" id="monthly-budget" type="number" placeholder="5000" oninput="saveSettings()"></div>
+      <div class="form-group"><label class="form-label">Target Break-Even (months)</label><input class="form-control" id="breakeven" type="number" placeholder="18" oninput="saveSettings()"></div>
+      <div class="divider"></div>
+      <div class="stat-row"><span class="stat-key">Remaining Budget</span><span class="stat-val" id="remaining-budget">--</span></div>
+      <div class="stat-row"><span class="stat-key">% Budget Used</span><span class="stat-val" id="pct-used">--</span></div>
+      <div class="stat-row"><span class="stat-key">Runway (months)</span><span class="stat-val" id="runway">--</span></div>
+    </div>
+  </div>
+</div>
+</main>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Expense</div>
+      <button class="modal-close" onclick="closeModal()">x</button>
+    </div>
+    <div class="form-group"><label class="form-label">Expense Name *</label><input class="form-control" id="f-name" placeholder="e.g. Domain and Hosting"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="f-desc" rows="2" placeholder="Brief description..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Category</label>
+        <select class="form-control form-select" id="f-category">
+          <option>Legal &amp; Registration</option><option>Technology</option><option>Marketing</option><option>Office &amp; Operations</option><option>Staffing</option><option>Inventory / COGS</option><option>Finance &amp; Banking</option><option>Insurance</option><option>Equipment</option><option>Professional Services</option><option>Travel</option><option>Miscellaneous</option>
+        </select></div>
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select class="form-control form-select" id="f-priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Estimated Cost ($)</label><input class="form-control" id="f-est" type="number" placeholder="0.00" min="0"></div>
+      <div class="form-group"><label class="form-label">Actual Cost ($) <span style="color:var(--text3);font-weight:400">(optional)</span></label><input class="form-control" id="f-act" type="number" placeholder="0.00" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Due Date</label><input class="form-control" id="f-due" type="date"></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-control form-select" id="f-status"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Completed</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Vendor / Supplier</label><input class="form-control" id="f-vendor" placeholder="e.g. GoDaddy, Stripe, Fiverr"></div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveTaskModal()">Save Expense</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== AUTH + PAYWALL SYSTEM ======
+// Subscription stored on userData: { plan:'monthly'|'annual'|null, paidAt:timestamp, expiresAt:timestamp }
+// Trial = first session ever; no subscription needed for first 24-hour window (demo grace)
+
+const TRIAL_HOURS = 24; // how long free access lasts after registration
+const PRICE = { monthly: 20, annual: 199 };
+
+let currentUser = null;
+let billingCycle = 'monthly'; // 'monthly' or 'annual'
+let selectedPlan = 'monthly';
+
+// ══════════════════════════════════════════════════════
+// SUPABASE CONFIG
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://tsijutorhusxytuwaiqn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzaWp1dG9yaHVzeHl0dXdhaXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NTA4NDAsImV4cCI6MjA5NTQyNjg0MH0.fHmaup2hL30Go4sFsIlyIHzw9BjtS0lUXSZnT8ATcbk';
+
+async function sbFetch(path, opts={}){
+  const res = await fetch(SUPABASE_URL+'/rest/v1/'+path, {
+    headers:{
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer '+SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer||'return=representation',
+      ...opts.headers
+    },
+    ...opts
+  });
+  if(!res.ok){
+    const err = await res.text();
+    throw new Error('Supabase error: '+err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+function generateCode(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const s=n=>Array.from({length:n},()=>c[Math.floor(Math.random()*c.length)]).join('');
+  return 'LL-'+s(4)+'-'+s(4);
+}
+
+// ── Supabase data helpers ─────────────────────────────
+async function getUserData(code){
+  try{
+    const rows = await sbFetch(`users?code=eq.${encodeURIComponent(code)}&limit=1`);
+    if(!rows||rows.length===0) return null;
+    const u = rows[0];
+    return {
+      firstName: u.first_name, lastName: u.last_name,
+      email: u.email, code: u.code, joined: u.joined,
+      registeredAt: u.registered_at,
+      subscription: u.subscription,
+      settings: u.settings||{}
+    };
+  }catch(e){console.error('getUserData',e);return null;}
+}
+
+async function getUserByEmail(email){
+  try{
+    const rows = await sbFetch(`users?email=eq.${encodeURIComponent(email)}&limit=1`);
+    return rows && rows.length>0 ? rows[0] : null;
+  }catch(e){console.error('getUserByEmail',e);return null;}
+}
+
+async function createUser(userData){
+  return sbFetch('users', {
+    method:'POST',
+    prefer:'return=representation',
+    body: JSON.stringify({
+      code: userData.code,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      email: userData.email,
+      joined: userData.joined,
+      registered_at: userData.registeredAt,
+      subscription: null,
+      settings: {}
+    })
+  });
+}
+
+async function updateUserSettings(code, settingsObj){
+  return sbFetch(`users?code=eq.${encodeURIComponent(code)}`, {
+    method:'PATCH',
+    prefer:'return=minimal',
+    body: JSON.stringify({ settings: settingsObj })
+  });
+}
+
+async function updateUserSubscription(code, sub){
+  return sbFetch(`users?code=eq.${encodeURIComponent(code)}`, {
+    method:'PATCH',
+    prefer:'return=minimal',
+    body: JSON.stringify({ subscription: sub })
+  });
+}
+
+async function getTasksForUser(code){
+  try{
+    const rows = await sbFetch(`tasks?user_code=eq.${encodeURIComponent(code)}&order=created_at.asc`);
+    if(!rows||rows.length===0) return null;
+    return rows.map(r=>({
+      id: r.id, name: r.name, desc: r.description,
+      category: r.category, priority: r.priority,
+      est: r.est, act: r.act, due: r.due,
+      status: r.status, vendor: r.vendor
+    }));
+  }catch(e){console.error('getTasksForUser',e);return null;}
+}
+
+async function upsertTask(code, task){
+  return sbFetch('tasks', {
+    method:'POST',
+    prefer:'resolution=merge-duplicates,return=minimal',
+    body: JSON.stringify({
+      id: task.id, user_code: code,
+      name: task.name, description: task.desc,
+      category: task.category, priority: task.priority,
+      est: task.est||0, act: task.act||null,
+      due: task.due||null, status: task.status,
+      vendor: task.vendor||null
+    })
+  });
+}
+
+async function deleteTaskFromDB(taskId){
+  return sbFetch(`tasks?id=eq.${encodeURIComponent(taskId)}`, {
+    method:'DELETE', prefer:'return=minimal'
+  });
+}
+
+async function insertDefaultTasks(code){
+  const rows = defaults.map(d=>({
+    id: uid(), user_code: code,
+    name: d.name, description: d.desc,
+    category: d.category, priority: d.priority,
+    est: d.est, act: d.act||null,
+    due: d.due||null, status: d.status,
+    vendor: d.vendor||null
+  }));
+  return sbFetch('tasks', {
+    method:'POST',
+    prefer:'return=minimal',
+    body: JSON.stringify(rows)
+  });
+}
+
+// ── Subscription helpers ──────────────────────────────
+function isSubscriptionActive(userData) {
+  if (!userData) return false;
+  const sub = userData.subscription;
+  if (!sub || !sub.paidAt) return false;
+  if (sub.plan === 'annual') {
+    return Date.now() < sub.expiresAt;
+  }
+  // monthly
+  return Date.now() < sub.expiresAt;
+}
+
+function isInTrial(userData) {
+  if (!userData || !userData.registeredAt) return false;
+  const elapsed = Date.now() - userData.registeredAt;
+  return elapsed < TRIAL_HOURS * 60 * 60 * 1000;
+}
+
+function daysUntilExpiry(userData) {
+  if (!userData || !userData.subscription) return 0;
+  const ms = userData.subscription.expiresAt - Date.now();
+  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+}
+
+function trialHoursLeft(userData) {
+  if (!userData || !userData.registeredAt) return 0;
+  const ms = (userData.registeredAt + TRIAL_HOURS * 3600000) - Date.now();
+  return Math.max(0, Math.ceil(ms / 3600000));
+}
+
+function canAccessApp(userData) {
+  return isSubscriptionActive(userData) || isInTrial(userData);
+}
+
+// ── Auth tab switching ────────────────────────────────
+function switchAuthTab(tab){
+  ['register','login'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('panel-'+t).classList.toggle('active',t===tab);
+  });
+  document.getElementById('reg-error').classList.remove('show');
+  document.getElementById('login-error').classList.remove('show');
+}
+
+function showAuthError(panel,msg){
+  const el=document.getElementById(panel+'-error');
+  el.textContent=msg;el.classList.add('show');
+}
+
+function setAuthLoading(panel, loading, btnText){
+  const btn = document.getElementById(panel==='reg'?'reg-btn':'login-btn');
+  if(!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Please wait...' : btnText;
+}
+
+// ── Registration ──────────────────────────────────────
+async function registerUser(){
+  const first=document.getElementById('reg-first').value.trim();
+  const last=document.getElementById('reg-last').value.trim();
+  const email=document.getElementById('reg-email').value.trim().toLowerCase();
+  document.getElementById('reg-error').classList.remove('show');
+  if(!first||!last){showAuthError('reg','Please enter your first and last name.');return;}
+  if(!email||!email.includes('@')||!email.includes('.')){showAuthError('reg','Please enter a valid email address.');return;}
+
+  setAuthLoading('reg', true, 'Create My Tracker →');
+  try{
+    // Check if email already exists
+    const existing = await getUserByEmail(email);
+    if(existing){
+      showAuthError('reg','This email is already registered. Use "Return User" to sign in.');
+      setAuthLoading('reg', false, 'Create My Tracker →');
+      return;
+    }
+    // Generate unique code
+    let code = generateCode();
+    let tries = 0;
+    while(await getUserData(code) && tries < 10){ code = generateCode(); tries++; }
+
+    const joined=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const userData={firstName:first,lastName:last,email,code,joined,registeredAt:Date.now()};
+    await createUser(userData);
+
+    // Insert default tasks for new user
+    await insertDefaultTasks(code);
+
+    localStorage.setItem('ll_session',JSON.stringify({code,email}));
+    document.getElementById('reg-welcome-name').textContent=first;
+    document.getElementById('reg-code-display').textContent=code;
+    document.getElementById('reg-step1').style.display='none';
+    document.getElementById('reg-step2').style.display='block';
+    currentUser={firstName:first,lastName:last,email,code,joined};
+  }catch(e){
+    showAuthError('reg','Connection error. Please check your internet and try again.');
+    console.error(e);
+  }
+  setAuthLoading('reg', false, 'Create My Tracker →');
+}
+
+function copyCode(){
+  const code=document.getElementById('reg-code-display').textContent;
+  const btn=document.querySelector('.code-copy-btn');
+  navigator.clipboard.writeText(code).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=code;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });
+  btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy Code',2000);
+}
+
+async function enterApp(){
+  const ud = await getUserData(currentUser.code);
+  document.getElementById('auth-gate').style.display='none';
+  if(canAccessApp(ud)){
+    document.getElementById('main-app').style.display='grid';
+    await initApp();
+  } else {
+    openPaywall();
+  }
+}
+
+// ── Login ─────────────────────────────────────────────
+async function loginUser(){
+  const code=document.getElementById('login-code').value.trim().toUpperCase();
+  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  document.getElementById('login-error').classList.remove('show');
+  if(!code){showAuthError('login','Please enter your access code.');return;}
+  if(!email){showAuthError('login','Please enter your email address.');return;}
+
+  setAuthLoading('login', true, 'Access My Tracker →');
+  try{
+    const userData = await getUserData(code);
+    if(!userData){showAuthError('login','Access code not found. Please double-check and try again.');setAuthLoading('login',false,'Access My Tracker →');return;}
+    if(userData.email!==email){showAuthError('login','Email does not match this access code.');setAuthLoading('login',false,'Access My Tracker →');return;}
+    currentUser={firstName:userData.firstName,lastName:userData.lastName,email:userData.email,code,joined:userData.joined};
+    localStorage.setItem('ll_session',JSON.stringify({code,email}));
+    document.getElementById('auth-gate').style.display='none';
+    if(canAccessApp(userData)){
+      document.getElementById('main-app').style.display='grid';
+      await initApp();
+    } else {
+      openPaywall();
+    }
+  }catch(e){
+    showAuthError('login','Connection error. Please check your internet and try again.');
+    console.error(e);
+  }
+  setAuthLoading('login', false, 'Access My Tracker →');
+}
+
+// ── Sign out ──────────────────────────────────────────
+function signOut(){
+  if(!confirm('Sign out? Your data is permanently saved in the cloud.'))return;
+  localStorage.removeItem('ll_session');
+  currentUser=null;
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('paywall-gate').classList.remove('open');
+  document.getElementById('auth-gate').style.display='flex';
+  document.getElementById('reg-step1').style.display='block';
+  document.getElementById('reg-step2').style.display='none';
+  ['reg-first','reg-last','reg-email','login-code','login-email'].forEach(id=>document.getElementById(id).value='');
+  Object.values(charts).forEach(c=>{try{c.destroy()}catch{}});
+  charts={};tasks=[];
+  switchAuthTab('login');
+}
+
+// ── Session check ─────────────────────────────────────
+function checkSession(){
+  try{
+    const s=JSON.parse(localStorage.getItem('ll_session')||'null');
+    if(!s||!s.code||!s.email) return null;
+    return s;
+  }catch{return null;}
+}
+
+// ══════════════════════════════════════════════════════
+// PAYWALL LOGIC
+// ══════════════════════════════════════════════════════
+
+function openPaywall(){
+  // Pre-fill cardholder name
+  if(currentUser){
+    document.getElementById('pw-cardholder').value = currentUser.firstName+' '+currentUser.lastName;
+  }
+  document.getElementById('pw-main').style.display='block';
+  document.getElementById('pw-success').classList.remove('show');
+  document.getElementById('paywall-gate').classList.add('open');
+  selectPlan('monthly');
+}
+
+function toggleBilling(){
+  billingCycle = billingCycle === 'monthly' ? 'annual' : 'monthly';
+  const track = document.getElementById('billing-toggle');
+  track.classList.toggle('annual', billingCycle === 'annual');
+  document.getElementById('lbl-monthly').classList.toggle('active', billingCycle === 'monthly');
+  document.getElementById('lbl-annual').classList.toggle('active', billingCycle === 'annual');
+  selectPlan(billingCycle);
+}
+
+function selectPlan(plan){
+  selectedPlan = plan;
+  document.getElementById('card-monthly').classList.toggle('selected', plan === 'monthly');
+  document.getElementById('card-annual').classList.toggle('selected', plan === 'annual');
+
+  const price = PRICE[plan];
+  const priceStr = '$'+price+'.00';
+  const label = plan === 'monthly' ? 'Monthly Plan' : 'Annual Plan';
+
+  document.getElementById('pw-plan-label').textContent = label;
+  document.getElementById('pw-plan-price').textContent = priceStr;
+  document.getElementById('pw-total').textContent = priceStr;
+  document.getElementById('pw-pay-label').textContent = 'Pay '+priceStr+' \u2022 Unlock Access';
+}
+
+function fmtCard(input){
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+function fmtExpiry(input){
+  let v = input.value.replace(/\D/g,'').substring(0,4);
+  if(v.length>=2) v = v.substring(0,2)+' / '+v.substring(2);
+  input.value = v;
+}
+
+async function processPayment(){
+  const cardholder = document.getElementById('pw-cardholder').value.trim();
+  const cardnum = document.getElementById('pw-cardnum').value.replace(/\s/g,'');
+  const expiry = document.getElementById('pw-expiry').value.replace(/\s/g,'');
+  const cvv = document.getElementById('pw-cvv').value.trim();
+  const errEl = document.getElementById('pw-pay-error');
+  errEl.classList.remove('show');
+
+  if(!cardholder){errEl.textContent='Please enter the name on your card.';errEl.classList.add('show');return;}
+  if(cardnum.length<15||cardnum.length>16||!/^\d+$/.test(cardnum)){errEl.textContent='Please enter a valid card number.';errEl.classList.add('show');return;}
+  if(expiry.replace('/','').length<4){errEl.textContent='Please enter a valid expiry date (MM/YY).';errEl.classList.add('show');return;}
+  if(cvv.length<3){errEl.textContent='Please enter a valid CVV.';errEl.classList.add('show');return;}
+
+  const btn = document.getElementById('pw-pay-btn');
+  btn.classList.add('loading');
+  document.getElementById('pw-pay-label').textContent = 'Processing...';
+
+  // Simulate payment gateway (replace with real Stripe call in production)
+  await new Promise(r=>setTimeout(r,1800));
+
+  try{
+    const now = Date.now();
+    const expiresAt = selectedPlan==='annual' ? now+365*24*3600000 : now+30*24*3600000;
+    const sub = { plan: selectedPlan, paidAt: now, expiresAt };
+
+    // Save to Supabase
+    await updateUserSubscription(currentUser.code, sub);
+
+    btn.classList.remove('loading');
+    const planLabel = selectedPlan==='annual' ? 'Annual Plan — $199' : 'Monthly Plan — $20/mo';
+    const renewal = selectedPlan==='annual'
+      ? 'Annual renewal in 12 months'
+      : new Date(expiresAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('success-plan-name').textContent = planLabel;
+    document.getElementById('success-code').textContent = currentUser.code;
+    document.getElementById('success-renewal').textContent = renewal;
+    document.getElementById('pw-main').style.display='none';
+    document.getElementById('pw-success').classList.add('show');
+  }catch(e){
+    btn.classList.remove('loading');
+    document.getElementById('pw-pay-label').textContent = 'Pay $'+PRICE[selectedPlan]+'.00 \u2022 Unlock Access';
+    errEl.textContent='Payment failed. Please try again.';errEl.classList.add('show');
+    console.error(e);
+  }
+}
+
+function enterAppFromPaywall(){
+  document.getElementById('paywall-gate').classList.remove('open');
+  document.getElementById('main-app').style.display='grid';
+  initApp();
+}
+
+function restoreAccess(){
+  // For users who paid but cleared browser storage — they re-enter code+email via login
+  document.getElementById('paywall-gate').classList.remove('open');
+  document.getElementById('auth-gate').style.display='flex';
+  switchAuthTab('login');
+}
+
+// ══════════════════════════════════════════════════════
+// APP CORE
+// ══════════════════════════════════════════════════════
+let tasks=[],editingId=null,charts={};
+let settings={
+  bizName:'My Startup',industry:'Technology / SaaS',stage:'Idea / Planning',
+  totalBudget:50000,monthlyRevenue:0,launchDate:'',fundingType:'Self-Funded / Bootstrapped',
+  totalFunding:50000,monthlyBudget:5000,breakeven:18
+};
+
+const defaults=[
+  {name:'Business Registration / LLC Formation',desc:'State filing fees and registered agent service',category:'Legal & Registration',priority:'high',est:500,act:null,due:'2025-02-01',status:'todo',vendor:'LegalZoom'},
+  {name:'Trademark Registration',desc:'USPTO filing for brand name and logo',category:'Legal & Registration',priority:'high',est:1500,act:null,due:'2025-02-15',status:'todo',vendor:'USPTO'},
+  {name:'Operating Agreement / Legal Docs',desc:'Attorney fees for operating agreements and contracts',category:'Legal & Registration',priority:'high',est:1200,act:null,due:'2025-02-28',status:'todo',vendor:'Local Attorney'},
+  {name:'Domain Name Purchase',desc:'Primary .com domain registration (3 years)',category:'Technology',priority:'high',est:60,act:60,due:'2025-01-15',status:'done',vendor:'GoDaddy'},
+  {name:'Website Hosting and SSL',desc:'Cloud hosting with CDN and SSL certificate (annual)',category:'Technology',priority:'high',est:600,act:null,due:'2025-01-20',status:'inprogress',vendor:'AWS'},
+  {name:'Business Software Suite',desc:'Project management, communication, and productivity tools',category:'Technology',priority:'medium',est:1800,act:null,due:'2025-02-01',status:'todo',vendor:'Various'},
+  {name:'CRM and Email Marketing Platform',desc:'Customer relationship management and email campaigns',category:'Technology',priority:'medium',est:900,act:null,due:'2025-03-01',status:'todo',vendor:'HubSpot'},
+  {name:'Logo and Brand Identity Design',desc:'Professional logo, brand guidelines, and asset library',category:'Marketing',priority:'high',est:2500,act:2200,due:'2025-01-31',status:'done',vendor:'Fiverr Pro'},
+  {name:'Website Design and Development',desc:'Custom website or landing page with copywriting',category:'Marketing',priority:'high',est:8000,act:null,due:'2025-03-15',status:'inprogress',vendor:'Freelancer'},
+  {name:'Initial Marketing Campaign',desc:'Launch ads across Google, Facebook, and Instagram',category:'Marketing',priority:'high',est:3000,act:null,due:'2025-04-01',status:'todo',vendor:'Meta / Google Ads'},
+  {name:'Business Cards and Print Materials',desc:'Professional printed collateral for networking',category:'Marketing',priority:'low',est:300,act:null,due:'2025-03-01',status:'todo',vendor:'Vistaprint'},
+  {name:'Social Media Management Tool',desc:'Scheduling and analytics platform (annual)',category:'Marketing',priority:'medium',est:600,act:null,due:'2025-03-01',status:'todo',vendor:'Buffer'},
+  {name:'Business Bank Account Setup',desc:'Opening fees and initial deposit for business checking',category:'Finance & Banking',priority:'high',est:500,act:500,due:'2025-01-10',status:'done',vendor:'Chase Business'},
+  {name:'Payment Processing Setup',desc:'Stripe or Square account and POS equipment if needed',category:'Finance & Banking',priority:'high',est:200,act:null,due:'2025-02-01',status:'todo',vendor:'Stripe'},
+  {name:'Accounting Software',desc:'QuickBooks or Xero annual subscription',category:'Finance & Banking',priority:'medium',est:720,act:null,due:'2025-02-01',status:'todo',vendor:'QuickBooks'},
+  {name:'Business Insurance (General Liability)',desc:'Annual premium for general liability coverage',category:'Insurance',priority:'high',est:1500,act:null,due:'2025-02-15',status:'todo',vendor:'Hiscox'},
+  {name:'Professional Liability Insurance',desc:'Errors and Omissions coverage for service businesses',category:'Insurance',priority:'medium',est:1200,act:null,due:'2025-03-01',status:'todo',vendor:'Next Insurance'},
+  {name:'Office Equipment and Hardware',desc:'Laptops, monitors, and peripherals for team',category:'Equipment',priority:'high',est:4500,act:null,due:'2025-02-01',status:'todo',vendor:'Apple / Dell'},
+  {name:'Office Furniture and Setup',desc:'Desks, chairs, and basic office furnishings',category:'Office & Operations',priority:'low',est:2000,act:null,due:'2025-02-15',status:'todo',vendor:'IKEA'},
+  {name:'Co-working Space (6 months)',desc:'Flexible workspace membership for the team',category:'Office & Operations',priority:'medium',est:3600,act:null,due:'2025-02-01',status:'inprogress',vendor:'WeWork'},
+  {name:'Business Phone Line',desc:'VoIP business phone system (annual)',category:'Office & Operations',priority:'low',est:360,act:null,due:'2025-03-01',status:'todo',vendor:'RingCentral'},
+  {name:'Employee / Contractor Payroll Q1',desc:'First quarter staffing costs including benefits',category:'Staffing',priority:'high',est:18000,act:null,due:'2025-04-01',status:'todo',vendor:'Gusto'},
+  {name:'Freelance and Contract Services',desc:'Design, development, and marketing freelancers',category:'Professional Services',priority:'medium',est:4000,act:null,due:'2025-03-31',status:'todo',vendor:'Upwork'},
+  {name:'Market Research and Surveys',desc:'Customer discovery, surveys, and competitor analysis',category:'Professional Services',priority:'medium',est:800,act:null,due:'2025-02-01',status:'todo',vendor:'SurveyMonkey'},
+  {name:'Initial Product Inventory COGS',desc:'First batch of product inventory or materials',category:'Inventory / COGS',priority:'high',est:5000,act:null,due:'2025-03-15',status:'todo',vendor:'Supplier TBD'},
+  {name:'Conference and Networking Events',desc:'Industry events, trade shows, and local meetups',category:'Travel',priority:'low',est:1500,act:null,due:'2025-06-01',status:'todo',vendor:'Various'},
+  {name:'Emergency Contingency Fund',desc:'10% buffer for unexpected startup costs',category:'Miscellaneous',priority:'high',est:5000,act:null,due:'2025-01-01',status:'todo',vendor:'Reserve'},
+];
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2)}
+
+async function save(){
+  if(!currentUser) return;
+  // Save settings to Supabase
+  await updateUserSettings(currentUser.code, settings);
+}
+
+async function saveTaskModal(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Please enter an expense name.');return;}
+  const data={
+    id:editingId||uid(),name,
+    desc:document.getElementById('f-desc').value.trim(),
+    category:document.getElementById('f-category').value,
+    priority:document.getElementById('f-priority').value,
+    est:parseFloat(document.getElementById('f-est').value)||0,
+    act:parseFloat(document.getElementById('f-act').value)||null,
+    due:document.getElementById('f-due').value||'',
+    status:document.getElementById('f-status').value,
+    vendor:document.getElementById('f-vendor').value.trim()||'--'
+  };
+  if(editingId){const i=tasks.findIndex(t=>t.id===editingId);if(i>-1)tasks[i]=data;}
+  else tasks.push(data);
+  closeModal();
+  renderAll();
+  await upsertTask(currentUser.code, data); // save to Supabase
+}
+async function deleteTaskModal(id){
+  if(!confirm('Delete this expense?'))return;
+  tasks=tasks.filter(t=>t.id!==id);
+  renderAll();
+  await deleteTaskFromDB(id); // delete from Supabase
+}
+
+async function initApp(){
+  document.getElementById('user-avatar').textContent=(currentUser.firstName[0]+currentUser.lastName[0]).toUpperCase();
+  document.getElementById('user-display-name').textContent=currentUser.firstName+' '+currentUser.lastName;
+
+  // Show loading state
+  document.getElementById('metric-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);font-size:13px;">Loading your data...</div>';
+
+  try{
+    // Load user from Supabase
+    const ud = await getUserData(currentUser.code);
+    if(ud){
+      settings={...settings,...(ud.settings||{})};
+      // Load subscription info
+      const sub = ud.subscription;
+      if(sub && sub.plan){
+        const planName = sub.plan==='annual'?'Annual ($199)':'Monthly ($20/mo)';
+        const daysLeft = daysUntilExpiry(ud);
+        document.getElementById('settings-sub').innerHTML=`<span class="metric-badge badge-green">${planName}</span>`;
+        document.getElementById('settings-renews').textContent=daysLeft+' days remaining';
+      } else if(isInTrial(ud)){
+        const hrs=trialHoursLeft(ud);
+        document.getElementById('settings-sub').innerHTML=`<span class="metric-badge badge-amber">Free Trial</span>`;
+        document.getElementById('settings-renews').textContent=hrs+' hr'+(hrs===1?'':'s')+' remaining';
+      } else {
+        document.getElementById('settings-sub').innerHTML=`<span class="metric-badge badge-red">Inactive</span>`;
+        document.getElementById('settings-renews').textContent='--';
+      }
+      renderSubscriptionBanner(ud);
+    }
+
+    // Load tasks from Supabase
+    const dbTasks = await getTasksForUser(currentUser.code);
+    tasks = dbTasks || defaults.map(d=>({...d,id:uid()}));
+    // If no tasks existed yet (shouldn't happen after createUser, but safety net)
+    if(!dbTasks || dbTasks.length===0){
+      await insertDefaultTasks(currentUser.code);
+      tasks = await getTasksForUser(currentUser.code) || tasks;
+    }
+
+  }catch(e){
+    console.error('initApp load error',e);
+    tasks = defaults.map(d=>({...d,id:uid()}));
+  }
+
+  document.getElementById('settings-code').textContent=currentUser.code;
+  document.getElementById('settings-email').textContent=currentUser.email;
+  document.getElementById('settings-joined').textContent=currentUser.joined||'--';
+  applySettings();loadSettingsForm();renderAll();
+}
+
+function renderSubscriptionBanner(ud){
+  const wrap = document.getElementById('sub-banner-wrap');
+  if(!wrap) return;
+  if(!ud){ wrap.innerHTML=''; return; }
+  if(isInTrial(ud)){
+    const hrs = trialHoursLeft(ud);
+    wrap.innerHTML = `<div class="sub-banner">
+      <span>Free trial &mdash; <strong>${hrs} hour${hrs===1?'':'s'}</strong> remaining. Upgrade to keep full access after your trial.</span>
+      <button class="sub-banner-upgrade" onclick="openPaywall()">Upgrade &rarr;</button>
+    </div>`;
+  } else if(isSubscriptionActive(ud)){
+    const d = daysUntilExpiry(ud);
+    if(d <= 7){
+      wrap.innerHTML = `<div class="sub-banner">
+        <span>Your subscription expires in <strong>${d} day${d===1?'':'s'}</strong>. Renew to keep access.</span>
+        <button class="sub-banner-upgrade" onclick="openPaywall()">Renew &rarr;</button>
+      </div>`;
+    } else { wrap.innerHTML = ''; }
+  } else { wrap.innerHTML = ''; }
+}
+
+function renderAll(){
+  renderMetrics();renderDashboardAlerts();renderCharts();
+  renderTaskBoard();renderBudgetTable();renderForecast();renderReports();populateCategoryFilter();
+}
+
+// Settings
+async function saveSettings(){
+  settings.bizName=document.getElementById('biz-name').value||'My Startup';
+  settings.industry=document.getElementById('biz-industry').value;
+  settings.stage=document.getElementById('biz-stage').value;
+  settings.totalBudget=parseFloat(document.getElementById('total-budget').value)||50000;
+  settings.monthlyRevenue=parseFloat(document.getElementById('monthly-revenue').value)||0;
+  settings.launchDate=document.getElementById('launch-date').value;
+  settings.fundingType=document.getElementById('funding-type').value;
+  settings.totalFunding=parseFloat(document.getElementById('total-funding').value)||0;
+  settings.monthlyBudget=parseFloat(document.getElementById('monthly-budget').value)||5000;
+  settings.breakeven=parseInt(document.getElementById('breakeven').value)||18;
+  applySettings();renderAll();
+  await save(); // async save to Supabase
+}
+function loadSettingsForm(){
+  document.getElementById('biz-name').value=settings.bizName;
+  document.getElementById('biz-industry').value=settings.industry;
+  document.getElementById('biz-stage').value=settings.stage;
+  document.getElementById('total-budget').value=settings.totalBudget;
+  document.getElementById('monthly-revenue').value=settings.monthlyRevenue;
+  document.getElementById('launch-date').value=settings.launchDate;
+  document.getElementById('funding-type').value=settings.fundingType;
+  document.getElementById('total-funding').value=settings.totalFunding;
+  document.getElementById('monthly-budget').value=settings.monthlyBudget;
+  document.getElementById('breakeven').value=settings.breakeven;
+}
+function applySettings(){
+  document.getElementById('sidebar-biz-name').textContent=settings.bizName;
+  document.getElementById('sidebar-biz-stage').textContent=settings.industry+' - '+settings.stage;
+  const totalEst=tasks.reduce((s,t)=>s+parseFloat(t.est||0),0);
+  const remaining=settings.totalBudget-totalEst;
+  const pct=settings.totalBudget>0?Math.round((totalEst/settings.totalBudget)*100):0;
+  const monthly=settings.monthlyBudget||5000;
+  const runway=monthly>0?Math.round(remaining/monthly):0;
+  document.getElementById('remaining-budget').textContent=fmt(remaining);
+  document.getElementById('pct-used').textContent=pct+'%';
+  document.getElementById('runway').textContent=runway+' months';
+}
+
+// Metrics
+function calcMetrics(){
+  const totalEst=tasks.reduce((s,t)=>s+parseFloat(t.est||0),0);
+  const totalAct=tasks.reduce((s,t)=>s+parseFloat(t.act||0),0);
+  const done=tasks.filter(t=>t.status==='done').length;
+  const inprog=tasks.filter(t=>t.status==='inprogress').length;
+  const todo=tasks.filter(t=>t.status==='todo').length;
+  return{totalEst,totalAct,done,inprog,todo,overBudget:totalAct>totalEst&&totalAct>0,variance:totalEst-totalAct,total:tasks.length};
+}
+function renderMetrics(){
+  const m=calcMetrics();
+  const remaining=settings.totalBudget-m.totalEst;
+  const pct=settings.totalBudget>0?Math.min(100,Math.round((m.totalEst/settings.totalBudget)*100)):0;
+  document.getElementById('metric-grid').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Total Estimated</div><div class="metric-value">${fmt(m.totalEst)}</div><div class="metric-sub">Budget: ${fmt(settings.totalBudget)}</div></div>
+    <div class="metric-card"><div class="metric-label">Actual Spent</div><div class="metric-value">${fmt(m.totalAct)}</div><div class="metric-sub"><span class="metric-badge ${m.overBudget?'badge-red':'badge-green'}">${m.overBudget?'Over budget':'Under budget'}</span></div></div>
+    <div class="metric-card"><div class="metric-label">Remaining Budget</div><div class="metric-value" style="color:${remaining<0?'var(--red)':'var(--accent)'}">${fmt(remaining)}</div><div class="metric-sub">${pct}% of budget allocated</div></div>
+    <div class="metric-card"><div class="metric-label">Tasks Complete</div><div class="metric-value">${m.done}/${m.total}</div><div class="metric-sub"><span class="metric-badge badge-blue">${m.inprog} in progress</span></div></div>`;
+}
+function renderDashboardAlerts(){
+  const m=calcMetrics();let html='';
+  const today=new Date();
+  const overdue=tasks.filter(t=>t.status!=='done'&&t.due&&new Date(t.due)<today);
+  if(m.overBudget)html+=`<div class="alert alert-red">Actual spending exceeds estimated budget by ${fmt(m.totalAct-m.totalEst)}. Review costs.</div>`;
+  if(overdue.length>0)html+=`<div class="alert alert-amber">${overdue.length} task${overdue.length>1?'s are':' is'} past due. Review your task board.</div>`;
+  if(m.totalEst>settings.totalBudget*0.9&&m.totalEst<=settings.totalBudget)html+=`<div class="alert alert-amber">Over 90% of your total budget has been allocated (${fmt(m.totalEst)} of ${fmt(settings.totalBudget)}).</div>`;
+  if(!html)html=`<div class="alert alert-green">Budget is on track. Keep up the great work!</div>`;
+  document.getElementById('dashboard-alerts').innerHTML=html;
+}
+
+// Charts
+const catColors={'Legal & Registration':'#5B3B8C','Technology':'#185FA5','Marketing':'#C0392B','Office & Operations':'#B07D2A','Staffing':'#2C5F2E','Inventory / COGS':'#4A8C4D','Finance & Banking':'#0F6E56','Insurance':'#3266ad','Equipment':'#884ea0','Professional Services':'#1B5E8A','Travel':'#6c3483','Miscellaneous':'#717d7e'};
+function getColor(cat){return catColors[cat]||'#888'}
+
+function renderCharts(){
+  const byCategory={};
+  tasks.forEach(t=>{byCategory[t.category]=(byCategory[t.category]||0)+parseFloat(t.est||0);});
+  const cats=Object.keys(byCategory),vals=cats.map(c=>byCategory[c]),colors=cats.map(c=>getColor(c));
+  const totalEst=vals.reduce((a,b)=>a+b,0);
+  document.getElementById('donutTotal').textContent=fmt(totalEst);
+  if(charts.donut)charts.donut.destroy();
+  const dc=document.getElementById('donutChart');dc.style.maxWidth='220px';dc.style.maxHeight='220px';
+  charts.donut=new Chart(dc,{type:'doughnut',data:{labels:cats,datasets:[{data:vals,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:true,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)} (${Math.round(ctx.raw/totalEst*100)}%)`}}}}});
+  document.getElementById('donut-legend').innerHTML=cats.map((c,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${colors[i]}"></span>${c}: ${fmt(vals[i])}</span>`).join('');
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const planned=Array(12).fill(0),actual=Array(12).fill(0);
+  tasks.forEach(t=>{if(t.due){const m=new Date(t.due).getMonth();planned[m]+=parseFloat(t.est||0);actual[m]+=parseFloat(t.act||0);}});
+  if(charts.timeline)charts.timeline.destroy();
+  charts.timeline=new Chart(document.getElementById('timelineChart'),{type:'bar',data:{labels:months,datasets:[{label:'Planned',data:planned,backgroundColor:'#2C5F2E',borderRadius:4},{label:'Actual',data:actual,backgroundColor:'rgba(74,140,77,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:false,maxRotation:0,font:{size:11}}},y:{ticks:{callback:v=>'$'+Math.round(v/1000)+'k',font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}}}}});
+  const pri={high:0,medium:0,low:0};
+  tasks.forEach(t=>{pri[t.priority]=(pri[t.priority]||0)+parseFloat(t.est||0);});
+  if(charts.priority)charts.priority.destroy();
+  charts.priority=new Chart(document.getElementById('priorityChart'),{type:'doughnut',data:{labels:['High','Medium','Low'],datasets:[{data:[pri.high,pri.medium,pri.low],backgroundColor:['#C0392B','#B07D2A','#2C5F2E'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},boxWidth:10,padding:12}}}}});
+  const m=calcMetrics();
+  if(charts.status)charts.status.destroy();
+  charts.status=new Chart(document.getElementById('statusChart'),{type:'bar',data:{labels:['To Do','In Progress','Completed'],datasets:[{data:[m.todo,m.inprog,m.done],backgroundColor:['#888780','#B07D2A','#2C5F2E'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{stepSize:1},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}});
+}
+
+// Task Board
+function renderTaskBoard(){
+  ['todo','inprogress','done'].forEach(s=>{
+    const col=tasks.filter(t=>t.status===s);
+    document.getElementById('count-'+s).textContent=col.length;
+    document.getElementById('col-'+s).innerHTML=col.map(t=>taskCard(t)).join('');
+  });
+}
+function taskCard(t){
+  const today=new Date();today.setHours(0,0,0,0);
+  const due=t.due?new Date(t.due):null;
+  const isOverdue=due&&due<today&&t.status!=='done';
+  return`<div class="task-card" onclick="editTask('${t.id}')">
+    <div class="task-category">${t.category}</div>
+    <div class="task-name">${t.name}</div>
+    ${t.desc?`<div class="task-desc">${t.desc}</div>`:''}
+    <div class="task-meta"><div class="task-cost">${fmt(t.est||0)}</div><div class="task-due ${isOverdue?'overdue':''}">${isOverdue?'Overdue - ':''} ${t.due?formatDate(t.due):'No due date'}</div></div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      ${priorityBadge(t.priority)}
+      ${t.vendor&&t.vendor!=='--'?`<span class="metric-badge badge-blue" style="font-size:10px">${t.vendor}</span>`:''}
+    </div>
+  </div>`;
+}
+function priorityBadge(p){const map={high:['badge-red','High'],medium:['badge-amber','Med'],low:['badge-green','Low']};const[cls,label]=map[p]||['badge-blue','?'];return`<span class="metric-badge ${cls}" style="font-size:10px">${label}</span>`;}
+
+// Budget Table
+function populateCategoryFilter(){
+  const cats=[...new Set(tasks.map(t=>t.category))].sort();
+  const sel=document.getElementById('filter-category'),cur=sel.value;
+  sel.innerHTML='<option value="">All Categories</option>'+cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+function renderBudgetTable(){
+  const catF=document.getElementById('filter-category').value;
+  const statF=document.getElementById('filter-status').value;
+  let filtered=tasks;
+  if(catF)filtered=filtered.filter(t=>t.category===catF);
+  if(statF)filtered=filtered.filter(t=>t.status===statF);
+  const totalEst=filtered.reduce((s,t)=>s+parseFloat(t.est||0),0);
+  const totalAct=filtered.reduce((s,t)=>s+parseFloat(t.act||0),0);
+  const today=new Date();today.setHours(0,0,0,0);
+  document.getElementById('budget-tbody').innerHTML=filtered.map(t=>{
+    const due=t.due?new Date(t.due):null;
+    const overdue=due&&due<today&&t.status!=='done';
+    const variance=t.act?parseFloat(t.act)-parseFloat(t.est||0):null;
+    return`<tr>
+      <td><div style="font-weight:500">${t.name}</div>${t.vendor&&t.vendor!=='--'?`<div style="font-size:11px;color:var(--text3)">${t.vendor}</div>`:''}</td>
+      <td><span class="cat-pill" style="background:${getColor(t.category)}22;color:${getColor(t.category)}">${t.category}</span></td>
+      <td><span class="priority-dot priority-${t.priority}"></span>${t.priority.charAt(0).toUpperCase()+t.priority.slice(1)}</td>
+      <td>${statusPill(t.status)}</td>
+      <td style="font-weight:500">${fmt(t.est||0)}</td>
+      <td>${t.act?`<span style="font-weight:500;color:${variance>0?'var(--red)':'var(--accent)'}">${fmt(t.act)}</span>`:'<span style="color:var(--text3)">--</span>'}</td>
+      <td style="${overdue?'color:var(--red);font-weight:500':''}">${t.due?formatDate(t.due):'--'}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="editTask('${t.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTaskModal('${t.id}')">Del</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('total-est').textContent=fmt(totalEst);
+  document.getElementById('total-act').textContent=fmt(totalAct);
+}
+function statusPill(s){const map={todo:['badge-blue','To Do'],inprogress:['badge-amber','In Progress'],done:['badge-green','Done']};const[cls,label]=map[s]||['badge-blue',s];return`<span class="metric-badge ${cls}">${label}</span>`;}
+
+// Forecast
+function renderForecast(){
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const spend=Array(12).fill(0);
+  tasks.forEach(t=>{if(t.due){const m=new Date(t.due).getMonth();spend[m]+=parseFloat(t.est||0);}});
+  const rev=settings.monthlyRevenue||0;
+  const revenue=Array(12).fill(rev);
+  let cash=settings.totalFunding||settings.totalBudget||50000;
+  const cashflow=spend.map((s,i)=>{cash+=revenue[i]-s;return Math.round(cash);});
+  const netMonthly=spend.map((s,i)=>revenue[i]-s);
+  const totalSpend=spend.reduce((a,b)=>a+b,0);
+  const runway=settings.monthlyBudget>0?Math.round((settings.totalFunding||settings.totalBudget)/settings.monthlyBudget):0;
+  document.getElementById('forecast-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Projected Runway</div><div class="metric-value">${runway} mo</div><div class="metric-sub">At current burn rate</div></div>
+    <div class="metric-card"><div class="metric-label">Monthly Revenue</div><div class="metric-value">${fmt(rev)}</div><div class="metric-sub"><span class="metric-badge ${rev>0?'badge-green':'badge-amber'}">${rev>0?'Active':'Pre-revenue'}</span></div></div>
+    <div class="metric-card"><div class="metric-label">Total Projected Spend</div><div class="metric-value">${fmt(totalSpend)}</div><div class="metric-sub">Across 12 months</div></div>`;
+  if(charts.cashflow)charts.cashflow.destroy();
+  charts.cashflow=new Chart(document.getElementById('cashflowChart'),{type:'line',data:{labels:months,datasets:[{label:'Cash Balance',data:cashflow,borderColor:'#2C5F2E',backgroundColor:'rgba(44,95,46,0.08)',fill:true,tension:0.4,pointBackgroundColor:'#2C5F2E',pointRadius:4},{label:'Monthly Expenses',data:spend.map(v=>Math.round(v)),borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,0.06)',fill:true,tension:0.4,borderDash:[5,4],pointBackgroundColor:'#C0392B',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:12},boxWidth:10}}},scales:{y:{ticks:{callback:v=>v>=1000?'$'+Math.round(v/1000)+'k':'$'+v},grid:{color:'rgba(0,0,0,0.04)'}},x:{grid:{display:false}}}}});
+  document.getElementById('burnrate-table').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Month</th><th>Revenue</th><th>Expenses</th><th>Net</th><th>Cash Balance</th></tr></thead><tbody>${months.map((m,i)=>`<tr><td>${m} 2025</td><td style="color:var(--accent)">${fmt(revenue[i])}</td><td style="color:var(--red)">${fmt(spend[i])}</td><td style="font-weight:500;color:${netMonthly[i]>=0?'var(--accent)':'var(--red)'}">${fmt(netMonthly[i])}</td><td style="font-weight:600;color:${cashflow[i]>=0?'var(--text)':'var(--red)'}">${fmt(cashflow[i])}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+// Reports
+function renderReports(){
+  const byCategory={};
+  tasks.forEach(t=>{if(!byCategory[t.category])byCategory[t.category]={est:0,act:0};byCategory[t.category].est+=parseFloat(t.est||0);byCategory[t.category].act+=parseFloat(t.act||0);});
+  const cats=Object.keys(byCategory);
+  const estVals=cats.map(c=>Math.round(byCategory[c].est));
+  const actVals=cats.map(c=>Math.round(byCategory[c].act));
+  const rowH=Math.max(300,cats.length*36+80);
+  document.getElementById('reportCatChart').parentElement.style.height=rowH+'px';
+  if(charts.reportCat)charts.reportCat.destroy();
+  charts.reportCat=new Chart(document.getElementById('reportCatChart'),{type:'bar',data:{labels:cats,datasets:[{label:'Estimated',data:estVals,backgroundColor:'rgba(44,95,46,0.7)',borderRadius:3},{label:'Actual',data:actVals,backgroundColor:'rgba(192,57,43,0.6)',borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:10}}},scales:{x:{ticks:{callback:v=>'$'+Math.round(v/1000)+'k',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{font:{size:10}}}}}});
+  document.getElementById('health-bars').innerHTML=cats.map(c=>{const e=byCategory[c].est,a=byCategory[c].act;const pct=e>0?Math.min(100,Math.round((a/e)*100)):0;const color=pct>100?'var(--red)':pct>80?'var(--amber)':'var(--accent)';return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">${c}</span><span style="font-weight:500;color:${color}">${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div></div>`;}).join('');
+  const m=calcMetrics();const avgTask=tasks.length>0?m.totalEst/tasks.length:0;
+  document.getElementById('summary-stats').innerHTML=`
+    <div><div class="stat-row"><span class="stat-key">Total Expenses</span><span class="stat-val">${tasks.length}</span></div><div class="stat-row"><span class="stat-key">Avg Cost / Task</span><span class="stat-val">${fmt(avgTask)}</span></div><div class="stat-row"><span class="stat-key">Completion Rate</span><span class="stat-val">${tasks.length>0?Math.round((m.done/tasks.length)*100):0}%</span></div></div>
+    <div><div class="stat-row"><span class="stat-key">Highest Category</span><span class="stat-val">${cats.length?cats.reduce((a,b)=>byCategory[a].est>byCategory[b].est?a:b):'--'}</span></div><div class="stat-row"><span class="stat-key">Categories Used</span><span class="stat-val">${cats.length}</span></div><div class="stat-row"><span class="stat-key">Budget Variance</span><span class="stat-val" style="color:${m.variance>=0?'var(--accent)':'var(--red)'}">${fmt(m.variance)}</span></div></div>
+    <div><div class="stat-row"><span class="stat-key">Overdue Tasks</span><span class="stat-val" style="color:var(--red)">${tasks.filter(t=>t.status!=='done'&&t.due&&new Date(t.due)<new Date()).length}</span></div><div class="stat-row"><span class="stat-key">High Priority $</span><span class="stat-val">${fmt(tasks.filter(t=>t.priority==='high').reduce((s,t)=>s+parseFloat(t.est||0),0))}</span></div><div class="stat-row"><span class="stat-key">Actual Recorded</span><span class="stat-val">${tasks.filter(t=>t.act>0).length} items</span></div></div>`;
+}
+
+// Modal
+let defaultStatus='todo';
+function openAddTask(status='todo'){
+  defaultStatus=status;editingId=null;
+  document.getElementById('modal-title').textContent='Add Expense';
+  ['f-name','f-desc','f-est','f-act','f-vendor'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-category').value='Technology';
+  document.getElementById('f-priority').value='medium';
+  document.getElementById('f-status').value=status;
+  document.getElementById('f-due').value='';
+  document.getElementById('task-modal').classList.add('open');
+}
+function editTask(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  editingId=id;
+  document.getElementById('modal-title').textContent='Edit Expense';
+  document.getElementById('f-name').value=t.name;
+  document.getElementById('f-desc').value=t.desc||'';
+  document.getElementById('f-category').value=t.category;
+  document.getElementById('f-priority').value=t.priority;
+  document.getElementById('f-est').value=t.est||'';
+  document.getElementById('f-act').value=t.act||'';
+  document.getElementById('f-due').value=t.due||'';
+  document.getElementById('f-status').value=t.status;
+  document.getElementById('f-vendor').value=t.vendor||'';
+  document.getElementById('task-modal').classList.add('open');
+}
+function saveTask(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Please enter an expense name.');return;}
+  const data={
+    id:editingId||uid(),name,
+    desc:document.getElementById('f-desc').value.trim(),
+    category:document.getElementById('f-category').value,
+    priority:document.getElementById('f-priority').value,
+    est:parseFloat(document.getElementById('f-est').value)||0,
+    act:parseFloat(document.getElementById('f-act').value)||null,
+    due:document.getElementById('f-due').value||'',
+    status:document.getElementById('f-status').value,
+    vendor:document.getElementById('f-vendor').value.trim()||'--'
+  };
+  if(editingId){const i=tasks.findIndex(t=>t.id===editingId);if(i>-1)tasks[i]=data;}
+  else tasks.push(data);
+  save();closeModal();renderAll();
+}
+function deleteTask(id){
+  if(!confirm('Delete this expense?'))return;
+  tasks=tasks.filter(t=>t.id!==id);save();renderAll();
+}
+function closeModal(){document.getElementById('task-modal').classList.remove('open');editingId=null;}
+document.getElementById('task-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// Navigation
+const pageTitles={dashboard:'Dashboard',tasks:'Task Board',budget:'Budget Planner',forecast:'Cash Flow Forecast',reports:'Reports',settings:'Business Info'};
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('topbar-title').textContent=pageTitles[id]||id;
+  if(id==='reports')setTimeout(renderReports,50);
+  if(id==='forecast')setTimeout(renderForecast,50);
+}
+
+// Helpers
+function fmt(n){n=parseFloat(n)||0;return(n<0?'-$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function formatDate(d){if(!d)return'--';const[y,m,day]=d.split('-');const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return`${months[+m-1]} ${+day}, ${y}`;}
+
+// CSV Export
+function exportCSV(){
+  const header='Name,Category,Priority,Status,Estimated Cost,Actual Cost,Due Date,Vendor,Description';
+  const rows=tasks.map(t=>[`"${t.name}"`,`"${t.category}"`,t.priority,t.status,t.est||0,t.act||'',t.due||'',`"${t.vendor||''}"`,`"${(t.desc||'').replace(/"/g,'""')}"`].join(','));
+  const csv=[header,...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`${settings.bizName.replace(/\s+/g,'_')}_budget.csv`;a.click();
+}
+
+// Boot — async session restore
+(async()=>{
+  const session = checkSession();
+  if(session){
+    try{
+      const ud = await getUserData(session.code);
+      if(ud && ud.email===session.email){
+        currentUser={firstName:ud.firstName,lastName:ud.lastName,email:ud.email,code:session.code,joined:ud.joined};
+        document.getElementById('auth-gate').style.display='none';
+        if(canAccessApp(ud)){
+          document.getElementById('main-app').style.display='grid';
+          await initApp();
+        } else {
+          openPaywall();
+        }
+      } else {
+        localStorage.removeItem('ll_session');
+      }
+    }catch(e){
+      console.error('Session restore failed',e);
+      localStorage.removeItem('ll_session');
+    }
+  }
+})();
+</script>
+</body>
+</html>
