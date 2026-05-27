@@ -1358,9 +1358,9 @@ function renderFinBrowser(){
         subCount++;totalTasks++;
         const vendors=entry.vendors||[];
         const already=ST.tasks.some(t=>t.name===task&&t.taskType==='financial');
-        const estBadge=entry.est>0?'<span style="background:#fffbeb;color:#b45309;border:1px solid #fcd34d;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600;">~$'+entry.est.toLocaleString()+'</span> ':'';
+        const costLabel=entry.est>0?' <span style="font-size:11px;color:#b45309;font-weight:500;">~$'+entry.est.toLocaleString()+'</span>':'';
         taskRows+='<div style="display:flex;align-items:center;gap:10px;padding:10px 16px 10px 32px;border-bottom:1px solid var(--border);">'
-          +'<div style="flex:1;"><span style="font-size:13px;font-weight:500;color:var(--text);">'+task+'</span> '+estBadge+'</div>'
+          +'<div style="flex:1;font-size:13px;font-weight:500;color:var(--text);">'+task+costLabel+'</div>'
           +'<button class="btn '+(already?'btn-ghost':'btn-primary')+'" style="padding:5px 14px;font-size:12px;white-space:nowrap;" '
           +(already?'disabled ':'')
           +'onclick=\'quickAddTask("financial",'+JSON.stringify(cat)+','+JSON.stringify(sub)+','+JSON.stringify(task)+','+entry.est+','+JSON.stringify(vendors)+')\'>'
