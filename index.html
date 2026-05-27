@@ -631,12 +631,16 @@ select:focus + .pt-desc{display:block;}
 </div>
 
 <div class="page" id="page-nonfin-browser">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
     <div>
-      <h2 style="font-family:var(--font-display);font-size:18px;margin-bottom:4px;">Non-Financial Tasks</h2>
-      <p style="font-size:13px;color:var(--text2);">Click "Add to Board" on any task to include it in your Task Board.</p>
+      <h2 style="font-family:var(--font-display);font-size:18px;margin-bottom:4px;">Non-Financial Task Library</h2>
+      <p style="font-size:13px;color:var(--text2);">Browse by category — click any task to add it to your board.</p>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="showPage('tasks',null)">&#8592; Back to Task Board</button>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+    <input class="form-control" style="flex:1;min-width:180px;font-size:13px;" type="text" id="nonfin-search" placeholder="Search tasks..." oninput="renderNonfinBrowser()">
+    <select class="form-control form-select" style="width:220px;font-size:13px;" id="nonfin-cat" onchange="renderNonfinBrowser()"><option value="">All Categories</option></select>
   </div>
   <div id="nonfin-browser-list"></div>
 </div>
@@ -1318,28 +1322,56 @@ function renderFinBrowser(){
   const search=($('fin-browser-search')?.value||'').toLowerCase();
   const filterCat=$('fin-browser-cat')?.value||'';
   const catSel=$('fin-browser-cat');
-  if(catSel&&catSel.options.length<=1) Object.keys(FIN_DATA).sort().forEach(cat=>{ const o=document.createElement('option'); o.value=cat; o.textContent=cat; catSel.appendChild(o); });
-  let html='';
+  if(catSel&&catSel.options.length<=1){
+    Object.keys(FIN_DATA).sort().forEach(cat=>{
+      const o=document.createElement('option');o.value=cat;o.textContent=cat;catSel.appendChild(o);
+    });
+  }
+  let h='';
   Object.keys(FIN_DATA).sort().forEach(cat=>{
     if(filterCat&&cat!==filterCat) return;
-    let catHtml='';
+    let rows='';let cnt=0;
     Object.keys(FIN_DATA[cat]).sort().forEach(sub=>{
       Object.keys(FIN_DATA[cat][sub]).sort().forEach(task=>{
         const entry=FIN_DATA[cat][sub][task];
         if(search&&!(cat+' '+sub+' '+task).toLowerCase().includes(search)) return;
+        cnt++;
         const vendors=entry.vendors||[];
-        const estStr=entry.est>0?`<span style="background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">~$${entry.est.toLocaleString()}</span>`:'<span style="color:var(--text3);font-size:11px;">—</span>';
-        const vStr=vendors.length?vendors.map(v=>`<a href="${v.url}" target="_blank" style="color:var(--accent);font-size:11px;">${v.name}</a>`).join(', '):'<span style="color:var(--text3);font-size:11px;">—</span>';
-        catHtml+=`<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);">
-          <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">${task}</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">${sub}</div><div style="margin-top:4px;">${vStr}</div></div>
-          <div style="text-align:right;min-width:80px;">${estStr}</div>
-          <button class="btn btn-primary" style="padding:6px 14px;font-size:12px;white-space:nowrap;" onclick='addFinTask(${JSON.stringify(cat)},${JSON.stringify(sub)},${JSON.stringify(task)},${entry.est},${JSON.stringify(vendors)})'>+ Add</button>
-        </div>`;
+        const already=ST.tasks.some(t=>t.name===task&&t.taskType==='financial');
+        const estBadge=entry.est>0?'<span style="background:#fffbeb;color:#b45309;border:1px solid #fcd34d;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">~$'+entry.est.toLocaleString()+'</span>':'';
+        const vStr=vendors.length?vendors.map(v=>v.url?'<a href="'+v.url+'" target="_blank" style="color:var(--accent);font-size:11px;">'+v.name+'</a>':'<span style="font-size:11px;color:var(--text2);">'+v.name+'</span>').join(', '):'';
+        rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);">'
+          +'<div style="flex:1;">'
+          +'<div style="font-size:13px;font-weight:600;color:var(--text);">'+task+'</div>'
+          +'<div style="font-size:11px;color:var(--text2);margin-top:2px;">'+sub+'</div>'
+          +(vStr?'<div style="margin-top:4px;">'+vStr+'</div>':'')
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
+          +estBadge
+          +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px;white-space:nowrap;" '
+          +(already?'disabled ':'')
+          +'onclick=\'addFinTask('+JSON.stringify(cat)+','+JSON.stringify(sub)+','+JSON.stringify(task)+','+entry.est+','+JSON.stringify(vendors)+')\'>'
+          +(already?'&#10003; Added':'+ Add')+'</button>'
+          +'</div></div>';
       });
     });
-    if(catHtml) html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;"><div style="padding:12px 16px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;">${cat}</div>${catHtml}</div>`;
+    if(rows) h+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;">'
+      +'<div style="padding:12px 16px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between;">'
+      +'<span>'+cat+'</span><span style="font-size:11px;font-weight:400;opacity:0.85;">'+cnt+' tasks</span></div>'
+      +rows+'</div>';
   });
-  container.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--text3);">No tasks match your search.</div>';
+  container.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--text3);">No tasks found.</div>';
+}
+
+function addNonfinTask(cat,sub,task,vendors){
+  openTaskModal('nonfinancial');
+  setTimeout(()=>{
+    populateCategorySelect('nonfinancial');
+    const cs=$('f-category');if(cs){cs.value=cat;cascadeSubcategory(true);}
+    const ss=$('f-subcategory');if(ss){ss.value=sub;cascadeTaskName(true);}
+    const ns=$('f-name');if(ns){ns.value=task;cascadeVendors(true);}
+    if(vendors&&vendors.length){const vs=$('f-vendor-select');if(vs){vs.value=vendors[0].name;applyVendorPreset();}}
+  },60);
 }
 
 function addFinTask(cat,sub,task,est,vendors){
@@ -1369,26 +1401,45 @@ function openNonfinBrowser(){
 function renderNonfinBrowser(){
   const container=$('nonfin-browser-list');
   if(!container) return;
-  const groups={};
-  NONFIN_PRESETS.forEach(t=>{
-    if(!groups[t.category]) groups[t.category]=[];
-    groups[t.category].push(t);
-  });
-  let html='';
-  Object.entries(groups).forEach(([cat,tasks])=>{
-    html+=`<div class="nonfin-group"><div class="nonfin-group-title">${cat}</div><div class="nonfin-items">`;
-    tasks.forEach(t=>{
-      const alreadyAdded=ST.tasks.some(st=>st.name===t.name&&st.taskType==='nonfinancial');
-      html+=`<div class="nonfin-item${alreadyAdded?' nonfin-added':''}">
-        <div><div class="nonfin-item-name">${t.name}</div><div class="nonfin-item-desc">${t.description||''}</div></div>
-        <button class="btn btn-primary btn-sm" ${alreadyAdded?'disabled':''} onclick="promptAddNonfin(${JSON.stringify(t).replace(/"/g,'&quot;')})">
-          ${alreadyAdded?'Added':'Add to Board'}
-        </button>
-      </div>`;
+  const search=($('nonfin-search')?.value||'').toLowerCase();
+  const filterCat=$('nonfin-cat')?.value||'';
+  const catSel=$('nonfin-cat');
+  if(catSel&&catSel.options.length<=1){
+    Object.keys(NFIN_DATA).sort().forEach(cat=>{
+      const o=document.createElement('option');o.value=cat;o.textContent=cat;catSel.appendChild(o);
     });
-    html+='</div></div>';
+  }
+  let h='';
+  Object.keys(NFIN_DATA).sort().forEach(cat=>{
+    if(filterCat&&cat!==filterCat) return;
+    let rows='';let cnt=0;
+    Object.keys(NFIN_DATA[cat]).sort().forEach(sub=>{
+      Object.keys(NFIN_DATA[cat][sub]).sort().forEach(task=>{
+        if(search&&!(cat+' '+sub+' '+task).toLowerCase().includes(search)) return;
+        cnt++;
+        const entry=NFIN_DATA[cat][sub][task];
+        const vendors=entry.vendors||[];
+        const already=ST.tasks.some(t=>t.name===task&&t.taskType==='nonfinancial');
+        const vStr=vendors.length?vendors.map(v=>v.url?'<a href="'+v.url+'" target="_blank" style="color:var(--accent);font-size:11px;">'+v.name+'</a>':'<span style="font-size:11px;color:var(--text2);">'+v.name+'</span>').join(', '):'';
+        rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);">'
+          +'<div style="flex:1;">'
+          +'<div style="font-size:13px;font-weight:600;color:var(--text);">'+task+'</div>'
+          +'<div style="font-size:11px;color:var(--text2);margin-top:2px;">'+sub+'</div>'
+          +(vStr?'<div style="margin-top:4px;">'+vStr+'</div>':'')
+          +'</div>'
+          +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px;white-space:nowrap;" '
+          +(already?'disabled ':'')
+          +'onclick=\'addNonfinTask('+JSON.stringify(cat)+','+JSON.stringify(sub)+','+JSON.stringify(task)+','+JSON.stringify(vendors)+')\'>'
+          +(already?'&#10003; Added':'+ Add')+'</button>'
+          +'</div>';
+      });
+    });
+    if(rows) h+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;">'
+      +'<div style="padding:12px 16px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between;">'
+      +'<span>'+cat+'</span><span style="font-size:11px;font-weight:400;opacity:0.85;">'+cnt+' tasks</span></div>'
+      +rows+'</div>';
   });
-  container.innerHTML=html;
+  container.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--text3);">No tasks found.</div>';
 }
 
 function promptAddNonfin(task){
