@@ -72,9 +72,6 @@
 .role-pill.selected{border-color:var(--accent);background:var(--accent-bg);}
 .role-pill-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
 .role-pill-desc{font-size:11px;color:var(--text2);}
-/* PAYWALL */
-#paywall-gate{position:fixed;inset:0;background:var(--bg);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
-#paywall-gate.open{display:flex;}
 .pw-shell{width:100%;max-width:540px;padding:20px 0;}
 .pw-brand-logo{font-family:var(--font-display);font-size:26px;color:var(--text);text-align:center;margin-bottom:20px;}
 .pw-eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:5px;text-align:center;}
@@ -771,7 +768,7 @@ select:focus + .pt-desc{display:block;}
       </div>
       <!-- Admin: invite user -->
       <div id="admin-invite-section" style="display:none;margin-top:14px;">
-        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Invite a User (Admin Only)</div>
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Invite a User (Admin Only) <span class="tip" data-tip="As an Admin, generate a one-time invite code and share it with a new user. They enter this code when registering to join your workspace. Each code can only be used once.">?</span></div>
         <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;">
           <div id="invite-code-display" style="font-size:12px;color:var(--text2);margin-bottom:8px;"></div>
           <button class="btn btn-ghost btn-sm" onclick="generateUserInvite()">Generate Invite Code</button>
@@ -785,7 +782,7 @@ select:focus + .pt-desc{display:block;}
         <div class="funding-grid" id="funding-checkboxes"></div>
         <div class="funding-total" id="funding-total-display">Total Funding: $0</div>
       </div>
-      <div class="form-group"><label class="form-label">Monthly Operating Budget ($) <span class="tip" data-tip="How much you spend per month to run your business.">?</span></label><input class="form-control" id="monthly-budget" type="number" placeholder="5000" oninput="saveSettings()"></div>
+      <div class="form-group"><label class="form-label">Monthly Operating Budget ($) <span class="tip" data-tip="Auto-calculated from your Financial tasks. Uses Actual cost if entered, otherwise Estimated cost.">?</span></label><input class="form-control" id="monthly-budget" type="number" placeholder="Auto-calculated" readonly style="background:var(--surface2);cursor:default;"></div>
       <div class="form-group"><label class="form-label">Target Break-Even (months) <span class="tip" data-tip="Number of months until you expect revenue to cover all expenses.">?</span></label><input class="form-control" id="breakeven" type="number" placeholder="18" oninput="saveSettings()"></div>
       <div class="divider"></div>
       <div class="stat-row"><span class="stat-key">Total Funding</span><span class="stat-val" id="total-funding-display">--</span></div>
@@ -922,7 +919,18 @@ select:focus + .pt-desc{display:block;}
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Vendor Name</label><input class="form-control" id="f-vendor" placeholder="e.g. GoDaddy"></div>
-      <div class="form-group"><label class="form-label">Vendor Website</label><input class="form-control" id="f-vendor-url" placeholder="https://vendor.com"></div>
+      <!-- Vendor Website: input mode (new task) vs link mode (edit existing) -->
+      <div class="form-group" id="vendor-url-input-group">
+        <label class="form-label">Vendor Website</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="form-control" id="f-vendor-url" placeholder="https://vendor.com" oninput="updateVendorUrlLink()" style="flex:1">
+          <a id="vendor-url-link" href="#" target="_blank" onclick="event.stopPropagation()" style="display:none;white-space:nowrap;font-size:12px;color:var(--accent);text-decoration:underline;font-weight:600;padding:2px 4px;">🔗 Visit</a>
+        </div>
+      </div>
+      <div class="form-group" id="vendor-url-display-group" style="display:none">
+        <label class="form-label">Vendor Website</label>
+        <a id="vendor-url-display-link" href="#" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--accent);text-decoration:underline;font-weight:600;padding:7px 0;word-break:break-all;">🔗 <span id="vendor-url-display-text"></span></a>
+      </div>
     </div>
     <div class="form-row-3">
       <div class="form-group"><label class="form-label">Contact Name</label><input class="form-control" id="f-contact-name" placeholder="John Doe"></div>
@@ -1098,7 +1106,6 @@ function loginUser(){
 function signOut(){
   setCU(null); ST.currentUser=null;
   $('main-app').style.display='none';
-  // paywall removed
   $('auth-gate').style.display='flex';
   // Reset register form
   $('reg-step1') && ($('reg-step1').style.display='block');
@@ -1110,16 +1117,8 @@ function signOut(){
   $('login-code') && ($('login-code').value='');
 }
 
-// ── PAYWALL ──────────────────────────────────────────────────────────────────
-
-
-
-
-
-
 function bootApp(){
   $('auth-gate').style.display='none';
-  // paywall removed
   $('main-app').style.display='flex';
   const u=ST.currentUser;
   setText('user-display-name',u.name||u.email);
@@ -1176,6 +1175,9 @@ function openAddTask(status){
   if($('f-est')){ $('f-est').style.background=''; $('f-est').style.borderColor=''; }
   $('f-priority').value='medium';
   $('f-status').value=status||'todo';
+  hideVendorUrlLink();
+  const ig=$('vendor-url-input-group'); if(ig) ig.style.display='';
+  const dg=$('vendor-url-display-group'); if(dg) dg.style.display='none';
   setTaskType('financial');
   $('task-modal').style.display='flex';
 }
@@ -1203,6 +1205,17 @@ function openEditTask(id){
   $('f-due').value=task.dueDate||'';
   if(task.vendor){ $('f-vendor').value=task.vendor; const o=Array.from($('f-vendor-select').options).find(x=>x.value===task.vendor); if(o) $('f-vendor-select').value=task.vendor; }
   $('f-vendor-url').value=task.vendorUrl||'';
+  if(task.vendorUrl){
+    // Switch to link display mode
+    const ig=$('vendor-url-input-group'); if(ig) ig.style.display='none';
+    const dg=$('vendor-url-display-group'); if(dg) dg.style.display='';
+    const dl=$('vendor-url-display-link'); if(dl) dl.href=task.vendorUrl;
+    const dt=$('vendor-url-display-text'); if(dt) dt.textContent=task.vendorUrl.replace(/^https?:\/\//,'');
+  } else {
+    const ig=$('vendor-url-input-group'); if(ig) ig.style.display='';
+    const dg=$('vendor-url-display-group'); if(dg) dg.style.display='none';
+    updateVendorUrlLink();
+  }
   $('f-contact-name').value=task.contactName||'';
   $('f-contact-email').value=task.contactEmail||'';
   $('f-contact-phone').value=task.contactPhone||'';
@@ -1324,7 +1337,26 @@ function saveTask(){
   };
   if(_editingTaskId){ const idx=ST.tasks.findIndex(t=>t.id===_editingTaskId); if(idx>=0) ST.tasks[idx]=task; else ST.tasks.push(task); }
   else ST.tasks.push(task);
-  saveState(); closeModal(); _refreshCurrentPage();
+  saveState();
+  calcMonthlyBudget();
+  if(!_editingTaskId && _taskType==='financial'){
+    // Reset form for next financial task entry
+    ['f-desc','f-est','f-act','f-due','f-vendor','f-vendor-url','f-contact-name','f-contact-email','f-contact-phone']
+      .forEach(id=>{ const e=$(id); if(e) e.value=''; });
+    if($('f-est')){ $('f-est').style.background=''; $('f-est').style.borderColor=''; }
+    if($('f-category')) $('f-category').value='';
+    cascadeSubcategory();
+    if($('f-priority')) $('f-priority').value='medium';
+    if($('f-status')) $('f-status').value='todo';
+    if($('f-vendor-select')) $('f-vendor-select').innerHTML='<option value="">-- Select Vendor --</option>';
+    hideVendorUrlLink();
+    const vig=$('vendor-url-input-group'); if(vig) vig.style.display='';
+    const vdg=$('vendor-url-display-group'); if(vdg) vdg.style.display='none';
+    showToast('Task has been added.', 3000);
+  } else {
+    closeModal();
+  }
+  _refreshCurrentPage();
 }
 
 function deleteTask(id){
@@ -1415,6 +1447,8 @@ function quickAddTask(type,cat,sub,taskName,est,vendors){
   };
   ST.tasks.push(task);
   saveState();
+  calcMonthlyBudget();
+  showToast('Task has been added.',3000);
   _refreshCurrentPage();
 }
 
@@ -1551,8 +1585,8 @@ function buildCard(task){
   const costHtml=isNF
     ?'<div style="font-size:11px;color:#7C3AED;font-weight:600;margin-top:4px">No Cost</div>'
     :`<div style="display:flex;gap:12px;margin-top:4px;font-size:11px;color:var(--text2)">
-        <span>Est: <b>${fmt(task.estCost)}</b></span>
-        <span>Actual: <b>${fmt(task.actualCost)}</b></span>
+        <span>Est: <b>${fmt(task.estimatedCost||task.estCost||0)}</b></span>
+        <span>Actual: <b>${fmt(task.actualCost||0)}</b></span>
       </div>`;
   const websiteHtml=task.vendorWebsite
     ?`<a href="${task.vendorWebsite}" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;color:var(--accent);text-decoration:underline">${task.vendorWebsite.replace(/^https?:\/\//,'')}</a>`
@@ -1744,6 +1778,10 @@ function updateFundingTotal(){
   const disp2=$('total-funding-display');
   if(disp2) disp2.textContent=fmt(total);
   ST.settings._fundingTotal=total;
+  // auto-sync Total Budget with Total Funding
+  if($('total-budget')){ $('total-budget').value=total||''; }
+  ST.settings.totalBudget=total;
+  save();
   updateBudgetStats(total);
 }
 
@@ -1761,6 +1799,7 @@ function updateBudgetStats(funding){
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function renderSettings(){
+  calcMonthlyBudget();
   const s=ST.settings;
   $('biz-name') && ($('biz-name').value=s.businessName||'');
   $('biz-stage') && ($('biz-stage').value=s.stage||'Idea / Planning');
@@ -1782,6 +1821,34 @@ function renderSettings(){
   const inv=$('admin-invite-section');
   if(inv) inv.style.display=u?.role==='admin'?'block':'none';
   renderFunding();
+}
+
+function updateVendorUrlLink(){
+  const val=($('f-vendor-url')?.value||'').trim();
+  const link=$('vendor-url-link');
+  if(!link) return;
+  if(val&&(val.startsWith('http')||val.startsWith('www'))){
+    link.href=val.startsWith('http')?val:'https://'+val;
+    link.style.display='inline';
+  } else {
+    link.style.display='none';
+  }
+}
+function hideVendorUrlLink(){
+  const link=$('vendor-url-link');
+  if(link){ link.style.display='none'; link.href='#'; }
+}
+
+function calcMonthlyBudget(){
+  const total=ST.tasks
+    .filter(t=>t.taskType==='financial')
+    .reduce((sum,t)=>{
+      const val=(t.actualCost&&t.actualCost>0)?t.actualCost:(t.estimatedCost||0);
+      return sum+val;
+    },0);
+  const el=$('monthly-budget');
+  if(el){ el.value=total||''; }
+  ST.settings.monthlyBudget=total;
 }
 
 function saveSettings(){
@@ -2068,7 +2135,7 @@ function renderAll(){
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
-function showToast(msg){
+function showToast(msg,dur){
   let t=document.getElementById('ll-toast');
   if(!t){
     t=document.createElement('div');
@@ -2077,7 +2144,7 @@ function showToast(msg){
     document.body.appendChild(t);
   }
   t.textContent=msg; t.style.opacity='1'; t.style.display='block';
-  clearTimeout(t._to); t._to=setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.style.display='none',300);},2500);
+  clearTimeout(t._to); t._to=setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.style.display='none',300);},(dur||2500));
 }
 
 // ── MISSING CSS FOR NEW ELEMENTS ──────────────────────────────────────────────
